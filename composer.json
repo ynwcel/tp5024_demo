@@ -1,0 +1,16 @@
+{
+    "name": "inphper/tp5024",
+    "type": "project",
+    "license": "MIT",
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "app\\": "application",
+            "think\\":"thinkphp/library/think",
+            "traits\\":"thinkphp/library/traits/"
+        }
+    }
+}
