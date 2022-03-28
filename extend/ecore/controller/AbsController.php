@@ -8,8 +8,8 @@ class AbsController extends Controller{
     protected $page_size = 50;
     protected $view_layout = '';
 
-    public function __constuct(){
-        parent::__constuct();
+    public function __construct(){
+        parent::__construct();
         $this->page_index = intval($this->request->get('pageidx'))<=1 ? 1 : intval($this->request->get('pageidx'));
         $this->page_size = intval($this->request->get('pagesize'))<=50 ? 50 : intval($this->request->get('pagesize'));
     }
