@@ -1,18 +1,23 @@
 <?php
-namespace ecore\dao;
+namespace tpext\dao;
 
-abstract class AbsDao {
+use think\DB;
 
-    protected $current_command = array();
+class Dao {
 
-    public function __construct(){
-        
+	protected $db = null;
+    protected $command = array();
+
+    public function __construct($link_tag='main'){
+        $this->db = DB::connect($link_tag);
     }
-
-    public abstract function db();
+	
+	public static function connect($link_tag='main'){
+		return new self($link_tag);
+	}
 
     public function __call($method,$params=array()){
-    	return call_user_func_array(array($this->db(),$method), $params);
+    	return call_user_func_array(array($this->db,$method), $params);
     }
 
     public function prepare($command,$params=array()){
@@ -21,14 +26,10 @@ abstract class AbsDao {
             $command = array_shift($_args);
             $params = $_args;
         }
-        $table_prefix = "";
-        $db_config = $this->db()->getConfig();
-        if(\is_array($db_config) && isset($db_config['prefix']) && $db_config['prefix']){
-            $table_prefix = $db_config['prefix']; 
-        }
+        $table_prefix = $this->db->getConfig('prefix');
         $command = preg_replace("/{{([^\s]+)}}/i", $table_prefix.'\\1', $command);
 
-        $this->current_command = array($command,$params);
+        $this->command = array($command,$params);
         return $this;
     }
 
@@ -57,16 +58,17 @@ abstract class AbsDao {
         return $this->query();
     }
 
-    public function fetchPage($page_size=30){
-        list($command,$params) = $this->current_command;
-        return $this->db()->table(sprintf("(%s) as a ",$command))->bind($params)->paginate($page_size);
+    public function fetchPage($page_index=null,$page_size=null){
+        $config = $page_index ? array('page'=>$page_index) : [];
+        list($command,$params) = $this->command;
+        return $this->db->table(sprintf("(%s) as a ",$command))->bind($params)->paginate($page_size,true,$config);
     }
 
     public function execute(){
-        list($command,$params) = array_values($this->current_command);
-        $this->current_command = null;
+        list($command,$params) = array_values($this->command);
+        $this->command = null;
 
-        return $this->db()->execute($command,$params);
+        return $this->db->execute($command,$params);
     }
 
     public function hasTable($table){
@@ -79,11 +81,11 @@ abstract class AbsDao {
         }
     }
 
-
     private function query(){
-        list($command,$params) = array_values($this->current_command);
-        $this->current_command = null;
+        list($command,$params) = array_values($this->command);
+        $this->command = null;
 
-        return $this->db()->query($command,$params);
+        return $this->db->query($command,$params);
     }
+	
 }
