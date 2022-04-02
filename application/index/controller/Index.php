@@ -1,10 +1,9 @@
 <?php
 namespace app\index\controller;
 
-use ecore\controller\AbsController;
+use tpext\controller\Controller;
 
-class Index extends AbsController{
-
+class Index extends Controller{
 
     public function index(){
         return THINK_VERSION;
