@@ -119,6 +119,7 @@ abstract class Connection
         PDO::ATTR_ORACLE_NULLS      => PDO::NULL_NATURAL,
         PDO::ATTR_STRINGIFY_FETCHES => false,
         PDO::ATTR_EMULATE_PREPARES  => false,
+        PDO::MYSQL_ATTR_MAX_BUFFER_SIZE => 16777216,
     ];
 
     // 绑定参数
