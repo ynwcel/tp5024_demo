@@ -1027,11 +1027,11 @@ class Query
      */
     public function wheres($wheres){
         if(!\is_array($wheres)){
-            throw new \Exception("wheres param must be array");
+            throw new DbException("wheres param must be array");
         }
         foreach($wheres as $where){
             if(!\is_array($where)){
-                throw new \Exception("wheres element must be array");
+                throw new DbException("wheres element must be array");
             }
             if(count($where) == 1){
                 $this->where(array_shift($where));
