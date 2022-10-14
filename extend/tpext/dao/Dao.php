@@ -8,11 +8,11 @@ class Dao {
 	protected $db = null;
     protected $command = array();
 
-    public function __construct($link_tag='main'){
+    public function __construct($link_tag='database.main'){
         $this->db = DB::connect($link_tag);
     }
 	
-	public static function connect($link_tag='main'){
+	public static function connect($link_tag='database.main'){
 		return new self($link_tag);
 	}
 
@@ -59,9 +59,15 @@ class Dao {
     }
 
     public function fetchPage($page_index=null,$page_size=null){
-        $config = $page_index ? array('page'=>$page_index) : [];
+        $page_config = [];
+        if($page_index){
+            $page_config['page'] = $page_index;
+        }
+        if($page_size){
+            $page_config['list_rows'] = $page_size;
+        }
         list($command,$params) = $this->command;
-        return $this->db->table(sprintf("(%s) as a ",$command))->bind($params)->paginate($page_size,true,$config);
+        return $this->db->table(sprintf("(%s) as a ",$command))->bind($params)->paginate($page_size,false,$page_config);
     }
 
     public function execute(){
@@ -87,5 +93,4 @@ class Dao {
 
         return $this->db->query($command,$params);
     }
-	
 }

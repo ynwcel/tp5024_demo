@@ -2,6 +2,7 @@
 namespace tpext\controller;
 
 use think\Controller as TpController;
+use think\Config;
 
 class Controller extends TpController{
     protected $page_index = 1;
@@ -25,5 +26,9 @@ class Controller extends TpController{
             $content = parent::fetch($view_layout,$layout_vars,$replace,$config);
         }
         return $content;
+    }
+
+    protected function render($template = '', $vars = [], $replace = [], $config = []){
+        return $this->fetch($template,$vars,$replace,$config);
     }
 }
