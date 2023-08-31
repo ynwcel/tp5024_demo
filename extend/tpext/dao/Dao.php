@@ -1,18 +1,19 @@
 <?php
 namespace tpext\dao;
 
-use think\DB;
+use think\Db;
 
 class Dao {
 
 	protected $db = null;
     protected $command = array();
 
-    public function __construct($link_tag='database.main'){
-        $this->db = DB::connect($link_tag);
+    public function __construct($link_tag='main'){
+        $link_tag = 0 !== strpos(strtolower($link_tag),'database.') ? sprintf("database.%s",$link_tag):$link_tag;
+        $this->db = Db::connect($link_tag);
     }
 	
-	public static function connect($link_tag='database.main'){
+	public static function connect($link_tag='main'){
 		return new self($link_tag);
 	}
 

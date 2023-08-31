@@ -1021,37 +1021,7 @@ class Query
         $this->options['table'] = $this->getPartitionTableName($data, $field, $rule);
         return $this;
     }
-
-    /**
-     * 指定多查询条件
-     */
-    public function wheres($wheres){
-        if(!\is_array($wheres)){
-            throw new DbException("wheres param must be array");
-        }
-        foreach($wheres as $where){
-            if(!\is_array($where)){
-                throw new DbException("wheres element must be array");
-            }
-            if(count($where) == 1){
-                $this->where(array_shift($where));
-            }else if(count($where) == 2){
-                list($field,$condition,$value) = array($where[0],'=',$where[1]);
-                $this->where($field,$condition,$value);
-            }else{
-                $field = array_shift($where);
-                $condition = array_shift($where);
-                if(\is_array(\current($where)) || count($where)==1){
-                    $value = array_shift($where);
-                }else{
-                    $value = $where;
-                }
-                $this->where($field,$condition,$value);
-            }
-        }
-        return $this;
-    }
-
+    
     /**
      * 指定AND查询条件
      * @access public
