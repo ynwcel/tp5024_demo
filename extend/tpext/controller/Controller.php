@@ -3,14 +3,17 @@ namespace tpext\controller;
 
 use think\Controller as TpController;
 use think\Config;
+use think\Request;
 
 class Controller extends TpController{
+    protected $request = null;
     protected $page_index = 1;
     protected $view_layout = '';
 
     public function __construct(){
         parent::__construct();
         $this->page_index = intval($this->request->get('pageidx'))<=1 ? 1 : intval($this->request->get('pageidx'));
+        $this->request = Request::instance();
     }
 
     protected function fetch($template = '', $vars = [], $replace = [], $config = []){

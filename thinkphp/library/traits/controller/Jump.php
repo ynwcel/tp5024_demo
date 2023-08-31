@@ -61,7 +61,9 @@ trait Jump
 
         $response = Response::create($result, $type)->header($header);
 
-        throw new HttpResponseException($response);
+        return $response;
+
+        //throw new HttpResponseException($response);
     }
 
     /**
@@ -102,7 +104,10 @@ trait Jump
 
         $response = Response::create($result, $type)->header($header);
 
-        throw new HttpResponseException($response);
+        
+        return $response;
+
+        //throw new HttpResponseException($response);
     }
 
     /**
@@ -127,7 +132,10 @@ trait Jump
         $type     = $type ?: $this->getResponseType();
         $response = Response::create($result, $type)->header($header);
 
-        throw new HttpResponseException($response);
+        
+        return $response;
+
+        //throw new HttpResponseException($response);
     }
 
     /**
@@ -150,7 +158,10 @@ trait Jump
         $response = new Redirect($url);
         $response->code($code)->params($params)->with($with);
 
-        throw new HttpResponseException($response);
+        
+        return $response;
+
+        //throw new HttpResponseException($response);
     }
 
     /**
