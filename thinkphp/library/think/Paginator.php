@@ -79,17 +79,6 @@ abstract class Paginator implements ArrayAccess, Countable, IteratorAggregate, J
             $this->hasMore     = $this->currentPage < $this->lastPage;
         }
         $this->items = $items;
-
-        //2023.02.17 优化
-        if(count($this->options['query'])==0 && count($_GET)>0){
-            $option_gets = $_GET;
-            if(isset($option_gets[$this->options['var_page']])){
-                unset($option_gets[$this->options['var_page']]);
-            }
-            $this->options['query'] = $option_gets;
-        }
-
-
     }
 
     /**

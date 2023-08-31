@@ -119,7 +119,6 @@ abstract class Connection
         PDO::ATTR_ORACLE_NULLS      => PDO::NULL_NATURAL,
         PDO::ATTR_STRINGIFY_FETCHES => false,
         PDO::ATTR_EMULATE_PREPARES  => false,
-        1005 => 83886080                        // 1005 = PDO::MYSQL_ATTR_MAX_BUFFER_SIZE 避免php旧版本无此常量
     ];
 
     // 绑定参数
@@ -286,12 +285,6 @@ abstract class Connection
             if (isset($config['result_type'])) {
                 $this->fetchType = $config['result_type'];
             }
-
-            //兼容旧php版本，无此常量参数
-            if(!defined('PDO::MYSQL_ATTR_MAX_BUFFER_SIZE')){
-                unset($params[1005]);
-            }
-
             try {
                 if (empty($config['dsn'])) {
                     $config['dsn'] = $this->parseDsn($config);

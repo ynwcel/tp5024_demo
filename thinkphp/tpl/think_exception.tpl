@@ -438,9 +438,7 @@
         <?php } ?>
     </div>
     <?php } ?>
-
-    <div class="copyright">
-    </div>
+    
     <?php if(\think\App::$debug) { ?>
     <script>
         var LINE = <?php echo $line; ?>;

@@ -61,8 +61,8 @@ trait Jump
 
         $response = Response::create($result, $type)->header($header);
 
+        
         return $response;
-
         //throw new HttpResponseException($response);
     }
 
@@ -106,7 +106,6 @@ trait Jump
 
         
         return $response;
-
         //throw new HttpResponseException($response);
     }
 
@@ -131,10 +130,7 @@ trait Jump
         ];
         $type     = $type ?: $this->getResponseType();
         $response = Response::create($result, $type)->header($header);
-
-        
         return $response;
-
         //throw new HttpResponseException($response);
     }
 
@@ -160,7 +156,6 @@ trait Jump
 
         
         return $response;
-
         //throw new HttpResponseException($response);
     }
 
