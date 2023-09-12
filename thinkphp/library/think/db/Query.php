@@ -1034,7 +1034,7 @@ class Query
      */
     public function wheres($wheres=[]){
         if(!is_array($wheres)){
-            throw new DbException("invalid wheres params",$this->connection->getConfig(),"");
+            throw new DbException("invalid params type",$this->connection->getConfig(),"");
         }
         foreach($wheres as $m_idx=> $where){
             ## 不是数组，则假定为字符串
