@@ -1065,7 +1065,6 @@ class Query
                         $p_binds[$p_name] = $this->raw(array_shift($where));
                         $p_idx++;
                     }
-                    print_r([$field,$p_binds]);
                     $this->whereRaw($field,$p_binds);
                 }
             }
