@@ -6,6 +6,8 @@
     * 取消显示 版本号
 * 修改 `thinkphp/library/db/Query.php:400` 行
     * 使用 `[]` 取值，避免 `php7.4`报错
+* 增加 `thinkphp/library/db/Query.php:1035` 行
+    * 增加 `wheres` 方法，方便二维数组设置参数
 
 #### 2.封装 
 
