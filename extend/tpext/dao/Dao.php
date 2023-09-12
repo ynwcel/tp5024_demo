@@ -17,6 +17,10 @@ class Dao {
 		return new self($link_tag);
 	}
 
+    public function db(){
+        return $this->db;
+    }
+
     public function __call($method,$params=array()){
     	return call_user_func_array(array($this->db,$method), $params);
     }

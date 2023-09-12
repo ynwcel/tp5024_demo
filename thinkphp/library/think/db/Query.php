@@ -1023,6 +1023,57 @@ class Query
     }
 
     /**
+     *  $wheres = array();
+     *  $wheres[] = "id >= 3";
+     *  $wheres[] = ["cate_id = ?",3];
+     *  $wheres[] = ["add_time >=? and add_time <= ?",'2003-01-01',date('Y-m-d')];
+     *  $wheres[] = ["orders","not between",[3,5]];
+     *  $wheres[] = ["orders","not between",3,5];
+     *  $wheres[] = ["cate_id","in",1,3,5,7,9];
+     *  $wheres[] = ["cate_id","in",[1,3,5,7,9]];
+     */
+    public function wheres($wheres=[]){
+        if(!is_array($wheres)){
+            throw new DbException("invalid wheres params",$this->connection->getConfig(),"");
+        }
+        foreach($wheres as $m_idx=> $where){
+            ## 不是数组，则假定为字符串
+            if(!is_array($where)){
+                $this->where($where);
+            }elseif(count($where)>0){
+                ## 条件不包括 ? 表达式 
+                if(strpos(current($where),'?')===false){
+                    $p_where = [];
+                    ## 原始的条件
+                    if(count($where)<=3){
+                        $p_where = $where;
+                    ## 多值的条件，需要把第3个参数以后整体作为参数
+                    }else{
+                        $p_where[] = array_shift($where);
+                        $p_where[] = array_shift($where);
+                        $p_where[] = $where;
+                    }
+                    call_user_func_array([$this,'where'],$p_where);
+                ## 需要解析 ? 条件 
+                }else{
+                    $field = array_shift($where);
+                    $p_idx = 1;
+                    $p_binds = [];
+                    while(strpos($field,'?')!==false){
+                        $p_name = sprintf("arg_%s_%s",$m_idx,$p_idx);
+                        $field = preg_replace('/\?/',sprintf(":%s",$p_name),$field,1);
+                        $p_binds[$p_name] = $this->raw(array_shift($where));
+                        $p_idx++;
+                    }
+                    print_r([$field,$p_binds]);
+                    $this->whereRaw($field,$p_binds);
+                }
+            }
+        }
+        return $this;
+    }
+
+    /**
      * 指定AND查询条件
      * @access public
      * @param mixed $field     查询字段
