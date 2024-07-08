@@ -1039,7 +1039,7 @@ class Query
         foreach($wheres as $m_idx=> $where){
             ## 不是数组，则假定为字符串
             if(!is_array($where)){
-                $this->where($where);
+                $this->whereRaw($where);
             }elseif(count($where)>0){
                 ## 条件不包括 ? 表达式 
                 if(strpos(current($where),'?')===false){

@@ -18,7 +18,7 @@ class Index extends Controller{
         $wheres[] = ["orders","not between",3,5];
         $wheres[] = ["cate_id","in",1,3,5,7,9];
         $wheres[] = ["cate_id","in",[1,3,5,7,9]];
-        print_r($dao->table('e_articles')->where('id',5)->wheres($wheres)->select());
+        print_r($dao->table('e_articles')->where('id',5)->wheres($wheres)->select(false));
         print_r($dao->getLastSql());
     }
 }
