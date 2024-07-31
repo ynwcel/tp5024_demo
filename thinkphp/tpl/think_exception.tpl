@@ -309,11 +309,9 @@
         pre.prettyprint .fun { color: red }  /* a function name */
     </style>
 </head>
+
 <body>
-    <div class="echo">
-        <?php echo $echo;?>
-    </div>
-    <?php if(\think\App::$debug) { ?>
+    <?php if(\think\Config::get('app_debug')) { ?>
     <div class="exception">
     <div class="message">
         
@@ -360,9 +358,7 @@
     </div>
     <?php } else { ?>
     <div class="exception">
-        
-            <div class="info"><h1><?php echo htmlentities($message); ?></h1></div>
-        
+        <div class="info"><h1>服务器异常!请联系管理员</h1></div>
     </div>
     <?php } ?>
     
@@ -438,7 +434,9 @@
         <?php } ?>
     </div>
     <?php } ?>
-    
+
+    <div class="copyright">
+    </div>
     <?php if(\think\App::$debug) { ?>
     <script>
         var LINE = <?php echo $line; ?>;
