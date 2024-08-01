@@ -1,4 +1,8 @@
 vendor
 composer.lock
 runtime
+config.php
+database.php
+*/config.php
+*/database.php
 
