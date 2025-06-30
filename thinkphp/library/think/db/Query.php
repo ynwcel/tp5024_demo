@@ -1025,6 +1025,7 @@ class Query
     /**
      *  $wheres = array();
      *  $wheres[] = "id >= 3";
+     *  $wheres[] = ["cate_id",3];
      *  $wheres[] = ["cate_id = ?",3];
      *  $wheres[] = ["add_time >=? and add_time <= ?",'2003-01-01',date('Y-m-d')];
      *  $wheres[] = ["orders","not between",[3,5]];

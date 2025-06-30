@@ -12,13 +12,14 @@ class Index extends Controller{
         $dao = Dao::connect('main');
         $wheres = array();
         $wheres[] = "id >= 3";
+        $wheres[] = ["id",7];
         $wheres[] = ["cate_id = ?",3];
         $wheres[] = ["add_time >=? and add_time <= ?",'2003-01-01',date('Y-m-d')];
         $wheres[] = ["orders","not between",[3,5]];
         $wheres[] = ["orders","not between",3,5];
         $wheres[] = ["cate_id","in",1,3,5,7,9];
         $wheres[] = ["cate_id","in",[1,3,5,7,9]];
-        print_r($dao->table('e_articles')->where('id',5)->wheres($wheres)->select(false));
+        print_r($dao->table('oa_admin')->where('id',5)->wheres($wheres)->select(false));
         print_r($dao->getLastSql());
     }
 }
