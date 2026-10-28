@@ -25,12 +25,8 @@ class Console
 
     private $terminalDimensions;
 
-    /** @var  Output */
-    private $output;
-
-    public function __construct(Output $output)
+    public function __construct(private Output $output)
     {
-        $this->output    = $output;
         $this->formatter = new Formatter();
         $this->stdout    = $this->openOutputStream();
         $decorated       = $this->hasColorSupport($this->stdout);
@@ -80,7 +76,7 @@ class Console
         $this->formatter->setDecorated($decorated);
 
         do {
-            $title = sprintf('  [%s]  ', get_class($e));
+            $title = sprintf('  [%s]  ', $e::class);
 
             $len = $this->stringWidth($title);
 
@@ -119,17 +115,17 @@ class Console
                 $trace = $e->getTrace();
                 array_unshift($trace, [
                     'function' => '',
-                    'file'     => $e->getFile() !== null ? $e->getFile() : 'n/a',
-                    'line'     => $e->getLine() !== null ? $e->getLine() : 'n/a',
+                    'file'     => $e->getFile() ?? 'n/a',
+                    'line'     => $e->getLine() ?? 'n/a',
                     'args'     => [],
                 ]);
 
                 for ($i = 0, $count = count($trace); $i < $count; ++$i) {
-                    $class    = isset($trace[$i]['class']) ? $trace[$i]['class'] : '';
-                    $type     = isset($trace[$i]['type']) ? $trace[$i]['type'] : '';
+                    $class    = $trace[$i]['class'] ?? '';
+                    $type     = $trace[$i]['type'] ?? '';
                     $function = $trace[$i]['function'];
-                    $file     = isset($trace[$i]['file']) ? $trace[$i]['file'] : 'n/a';
-                    $line     = isset($trace[$i]['line']) ? $trace[$i]['line'] : 'n/a';
+                    $file     = $trace[$i]['file'] ?? 'n/a';
+                    $line     = $trace[$i]['line'] ?? 'n/a';
 
                     $this->write(sprintf(' %s%s%s() at <info>%s:%s</info>', $class, $type, $function, $file, $line), true, Output::OUTPUT_NORMAL, $stderr);
                 }
@@ -342,9 +338,7 @@ class Console
      */
     protected function doWrite($message, $newline, $stream = null)
     {
-        if (null === $stream) {
-            $stream = $this->stdout;
-        }
+        $stream ??= $this->stdout;
         if (false === @fwrite($stream, $message . ($newline ? PHP_EOL : ''))) {
             throw new \RuntimeException('Unable to write output.');
         }

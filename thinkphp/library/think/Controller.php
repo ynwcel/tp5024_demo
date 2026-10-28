@@ -53,7 +53,7 @@ class Controller
     public function __construct(Request $request = null)
     {
         $this->view    = View::instance(Config::get('template'), Config::get('view_replace_str'));
-        $this->request = is_null($request) ? Request::instance() : $request;
+        $this->request = $request ?? Request::instance();
 
         // 控制器初始化
         $this->_initialize();
@@ -193,7 +193,7 @@ class Controller
         } else {
             // 支持场景
             if (strpos($validate, '.')) {
-                list($validate, $scene) = explode('.', $validate);
+                [$validate, $scene] = explode('.', $validate);
             }
 
             $v = Loader::validate($validate);

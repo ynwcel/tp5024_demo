@@ -134,7 +134,7 @@ class Handle
         if (App::$debug) {
             // 调试模式，获取详细的错误信息
             $data = [
-                'name'    => get_class($exception),
+                'name'    => $exception::class,
                 'file'    => $exception->getFile(),
                 'line'    => $exception->getLine(),
                 'message' => $this->getMessage($exception),
@@ -147,10 +147,10 @@ class Handle
                     'POST Data'             => $_POST,
                     'Files'                 => $_FILES,
                     'Cookies'               => $_COOKIE,
-                    'Session'               => isset($_SESSION) ? $_SESSION : [],
+                    'Session'               => $_SESSION ?? [],
                     'Server/Request Data'   => $_SERVER,
                     'Environment Variables' => $_ENV,
-                    'ThinkPHP Constants'    => $this->getConst(),
+                    'ThinkPHP Constants'    => self::getConst(),
                 ],
             ];
         } else {
@@ -185,9 +185,7 @@ class Handle
             $response->header($exception->getHeaders());
         }
 
-        if (!isset($statusCode)) {
-            $statusCode = 500;
-        }
+        $statusCode ??= 500;
         $response->code($statusCode);
         return $response;
     }
@@ -250,7 +248,7 @@ class Handle
                 'first'  => $first,
                 'source' => array_slice($contents, $first - 1, 19),
             ];
-        } catch (Exception $e) {
+        } catch (Exception) {
             $source = [];
         }
         return $source;

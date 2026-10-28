@@ -383,12 +383,7 @@ abstract class Connection
                 return $this->close()->query($sql, $bind, $master, $pdo);
             }
             throw new PDOException($e, $this->config, $this->getLastsql());
-        } catch (\Throwable $e) {
-            if ($this->isBreak($e)) {
-                return $this->close()->query($sql, $bind, $master, $pdo);
-            }
-            throw $e;
-        } catch (\Exception $e) {
+        } catch (\Throwable|\Exception $e) {
             if ($this->isBreak($e)) {
                 return $this->close()->query($sql, $bind, $master, $pdo);
             }
@@ -451,12 +446,7 @@ abstract class Connection
                 return $this->close()->execute($sql, $bind, $query);
             }
             throw new PDOException($e, $this->config, $this->getLastsql());
-        } catch (\Throwable $e) {
-            if ($this->isBreak($e)) {
-                return $this->close()->execute($sql, $bind, $query);
-            }
-            throw $e;
-        } catch (\Exception $e) {
+        } catch (\Throwable|\Exception $e) {
             if ($this->isBreak($e)) {
                 return $this->close()->execute($sql, $bind, $query);
             }
@@ -617,10 +607,7 @@ abstract class Connection
             }
             $this->commit();
             return $result;
-        } catch (\Exception $e) {
-            $this->rollback();
-            throw $e;
-        } catch (\Throwable $e) {
+        } catch (\Exception|\Throwable $e) {
             $this->rollback();
             throw $e;
         }
@@ -649,13 +636,7 @@ abstract class Connection
                 );
             }
 
-        } catch (\Exception $e) {
-            if ($this->isBreak($e)) {
-                --$this->transTimes;
-                return $this->close()->startTrans();
-            }
-            throw $e;
-        } catch (\Error $e) {
+        } catch (\Exception|\Error $e) {
             if ($this->isBreak($e)) {
                 --$this->transTimes;
                 return $this->close()->startTrans();
@@ -1033,12 +1014,12 @@ abstract class Connection
         if ($m != $r) {
             $dbMaster = [];
             foreach (['username', 'password', 'hostname', 'hostport', 'database', 'dsn', 'charset'] as $name) {
-                $dbMaster[$name] = isset($_config[$name][$m]) ? $_config[$name][$m] : $_config[$name][0];
+                $dbMaster[$name] = $_config[$name][$m] ?? $_config[$name][0];
             }
         }
         $dbConfig = [];
         foreach (['username', 'password', 'hostname', 'hostport', 'database', 'dsn', 'charset'] as $name) {
-            $dbConfig[$name] = isset($_config[$name][$r]) ? $_config[$name][$r] : $_config[$name][0];
+            $dbConfig[$name] = $_config[$name][$r] ?? $_config[$name][0];
         }
         return $this->connect($dbConfig, $r, $r == $m ? false : $dbMaster);
     }

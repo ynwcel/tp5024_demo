@@ -17,11 +17,8 @@ class Argument
     const REQUIRED = 1;
     const OPTIONAL = 2;
     const IS_ARRAY = 4;
-
-    private $name;
     private $mode;
     private $default;
-    private $description;
 
     /**
      * 构造方法
@@ -31,17 +28,14 @@ class Argument
      * @param mixed  $default     默认值 (仅 self::OPTIONAL 类型有效)
      * @throws \InvalidArgumentException
      */
-    public function __construct($name, $mode = null, $description = '', $default = null)
+    public function __construct(private $name, $mode = null, private $description = '', $default = null)
     {
         if (null === $mode) {
             $mode = self::OPTIONAL;
         } elseif (!is_int($mode) || $mode > 7 || $mode < 1) {
             throw new \InvalidArgumentException(sprintf('Argument mode "%s" is not valid.', $mode));
         }
-
-        $this->name        = $name;
         $this->mode        = $mode;
-        $this->description = $description;
 
         $this->setDefault($default);
     }

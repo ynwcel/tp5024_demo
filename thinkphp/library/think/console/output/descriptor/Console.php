@@ -20,16 +20,6 @@ class Console
     const GLOBAL_NAMESPACE = '_global';
 
     /**
-     * @var ThinkConsole
-     */
-    private $console;
-
-    /**
-     * @var null|string
-     */
-    private $namespace;
-
-    /**
      * @var array
      */
     private $namespaces;
@@ -49,10 +39,8 @@ class Console
      * @param ThinkConsole $console
      * @param string|null  $namespace
      */
-    public function __construct(ThinkConsole $console, $namespace = null)
+    public function __construct(private ThinkConsole $console, private $namespace = null)
     {
-        $this->console   = $console;
-        $this->namespace = $namespace;
     }
 
     /**
@@ -90,7 +78,7 @@ class Console
             throw new \InvalidArgumentException(sprintf('Command %s does not exist.', $name));
         }
 
-        return isset($this->commands[$name]) ? $this->commands[$name] : $this->aliases[$name];
+        return $this->commands[$name] ?? $this->aliases[$name];
     }
 
     private function inspectConsole()

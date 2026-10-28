@@ -110,7 +110,7 @@ abstract class Builder
                 // 对象数据写入
                 $val = $val->__toString();
             }
-            if (false === strpos($key, '.') && !in_array($key, $fields, true)) {
+            if (!str_contains($key, '.') && !in_array($key, $fields, true)) {
                 if ($options['strict']) {
                     throw new Exception('fields not exists:[' . $key . ']');
                 }
@@ -129,11 +129,11 @@ abstract class Builder
                 }
             } elseif (is_scalar($val)) {
                 // 过滤非标量数据
-                if (0 === strpos($val, ':') && $this->query->isBind(substr($val, 1))) {
+                if (str_starts_with($val, ':') && $this->query->isBind(substr($val, 1))) {
                     $result[$item] = $val;
                 } else {
                     $key = str_replace('.', '_', $key);
-                    $this->query->bind('data__' . $key, $val, isset($bind[$key]) ? $bind[$key] : PDO::PARAM_STR);
+                    $this->query->bind('data__' . $key, $val, $bind[$key] ?? PDO::PARAM_STR);
                     $result[$item] = ':data__' . $key;
                 }
             }
@@ -163,7 +163,7 @@ abstract class Builder
     protected function parseValue($value, $field = '')
     {
         if (is_string($value)) {
-            $value = strpos($value, ':') === 0 && $this->query->isBind(substr($value, 1)) ? $value : $this->connection->quote($value);
+            $value = str_starts_with($value, ':') && $this->query->isBind(substr($value, 1)) ? $value : $this->connection->quote($value);
         } elseif (is_array($value)) {
             $value = array_map([$this, 'parseValue'], $value);
         } elseif (is_bool($value)) {
@@ -240,7 +240,7 @@ abstract class Builder
         $whereStr = $this->buildWhere($where, $options);
         if (!empty($options['soft_delete'])) {
             // 附加软删除条件
-            list($field, $condition) = $options['soft_delete'];
+            [$field, $condition] = $options['soft_delete'];
 
             $binds    = $this->query->getFieldsBind($options['table']);
             $whereStr = $whereStr ? '( ' . $whereStr . ' ) AND ' : '';
@@ -320,7 +320,7 @@ abstract class Builder
         if (!is_array($val)) {
             $val = is_null($val) ? ['null', ''] : ['=', $val];
         }
-        list($exp, $value) = $val;
+        [$exp, $value] = $val;
 
         // 对一个字段使用多个查询条件
         if (is_array($exp)) {
@@ -360,9 +360,9 @@ abstract class Builder
             $value = $value->__toString();
         }
 
-        $bindType = isset($binds[$field]) ? $binds[$field] : PDO::PARAM_STR;
-        if (is_scalar($value) && array_key_exists($field, $binds) && !in_array($exp, ['EXP', 'NOT NULL', 'NULL', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN']) && strpos($exp, 'TIME') === false) {
-            if (strpos($value, ':') !== 0 || !$this->query->isBind(substr($value, 1))) {
+        $bindType = $binds[$field] ?? PDO::PARAM_STR;
+        if (is_scalar($value) && array_key_exists($field, $binds) && !in_array($exp, ['EXP', 'NOT NULL', 'NULL', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN']) && !str_contains($exp, 'TIME')) {
+            if (!str_starts_with($value, ':') || !$this->query->isBind(substr($value, 1))) {
                 if ($this->query->isBind($bindName)) {
                     $bindName .= '_' . str_replace('.', '_', uniqid('', true));
                 }
@@ -385,7 +385,7 @@ abstract class Builder
                 foreach ($value as $item) {
                     $array[] = $key . ' ' . $exp . ' ' . $this->parseValue($item, $field);
                 }
-                $logic = isset($val[2]) ? $val[2] : 'AND';
+                $logic = $val[2] ?? 'AND';
                 $whereStr .= '(' . implode(' ' . strtoupper($logic) . ' ',$array) . ')';
             } else {
                 $whereStr .= $key . ' ' . $exp . ' ' . $this->parseValue($value, $field);
@@ -489,7 +489,7 @@ abstract class Builder
     {
         // 获取时间字段类型
         if (strpos($key, '.')) {
-            list($table, $key) = explode('.', $key);
+            [$table, $key] = explode('.', $key);
             if (isset($options['alias']) && $pos = array_search($table, $options['alias'])) {
                 $table = $pos;
             }
@@ -531,7 +531,7 @@ abstract class Builder
      */
     protected function parseLimit($limit)
     {
-        return (!empty($limit) && false === strpos($limit, '(')) ? ' LIMIT ' . $limit . ' ' : '';
+        return (!empty($limit) && !str_contains($limit, '(')) ? ' LIMIT ' . $limit . ' ' : '';
     }
 
     /**
@@ -546,13 +546,13 @@ abstract class Builder
         $joinStr = '';
         if (!empty($join)) {
             foreach ($join as $item) {
-                list($table, $type, $on) = $item;
+                [$table, $type, $on] = $item;
                 $condition               = [];
                 foreach ((array) $on as $val) {
                     if ($val instanceof Expression) {
                         $condition[] = $val->getValue();
                     } elseif (strpos($val, '=')) {
-                        list($val1, $val2) = explode('=', $val, 2);
+                        [$val1, $val2] = explode('=', $val, 2);
                         $condition[]       = $this->parseKey($val1, $options) . '=' . $this->parseKey($val2, $options);
                     } else {
                         $condition[] = $val;
@@ -587,7 +587,7 @@ abstract class Builder
                 $array[] = $this->parseRand();
             } else {
                 if (is_numeric($key)) {
-                    list($key, $sort) = explode(' ', strpos($val, ' ') ? $val : $val . ' ');
+                    [$key, $sort] = explode(' ', strpos($val, ' ') ? $val : $val . ' ');
                 } else {
                     $sort = $val;
                 }
@@ -631,7 +631,7 @@ abstract class Builder
      */
     protected function parseComment($comment)
     {
-        if (false !== strpos($comment, '*/')) {
+        if (str_contains($comment, '*/')) {
             $comment = strstr($comment, '*/', true);
         }
         return !empty($comment) ? ' /* ' . $comment . ' */' : '';
@@ -800,9 +800,7 @@ abstract class Builder
             $value    = array_values($data);
             $values[] = 'SELECT ' . implode(',', $value);
 
-            if (!isset($insertFields)) {
-                $insertFields = array_keys($data);
-            }
+            $insertFields ??= array_keys($data);
         }
 
         foreach ($insertFields as $field) {

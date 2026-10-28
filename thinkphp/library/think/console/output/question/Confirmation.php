@@ -16,19 +16,15 @@ use think\console\output\Question;
 class Confirmation extends Question
 {
 
-    private $trueAnswerRegex;
-
     /**
      * 构造方法
      * @param string $question        问题
      * @param bool   $default         默认答案
      * @param string $trueAnswerRegex 验证正则
      */
-    public function __construct($question, $default = true, $trueAnswerRegex = '/^y/i')
+    public function __construct($question, $default = true, private $trueAnswerRegex = '/^y/i')
     {
         parent::__construct($question, (bool) $default);
-
-        $this->trueAnswerRegex = $trueAnswerRegex;
         $this->setNormalizer($this->getDefaultNormalizer());
     }
 

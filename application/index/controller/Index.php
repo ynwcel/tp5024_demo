@@ -10,7 +10,7 @@ class Index extends Controller{
         //return THINK_VERSION;
         echo "<pre>";
         $dao = Dao::connect('main');
-        $wheres = array();
+        $wheres = [];
         $wheres[] = "id >= 3";
         $wheres[] = ["id",7];
         $wheres[] = ["cate_id = ?",3];
@@ -19,7 +19,7 @@ class Index extends Controller{
         $wheres[] = ["orders","not between",3,5];
         $wheres[] = ["cate_id","in",1,3,5,7,9];
         $wheres[] = ["cate_id","in",[1,3,5,7,9]];
-        print_r($dao->table('oa_admin')->where('id',5)->wheres($wheres)->select(false));
+        print_r($dao->name('users')->where('id',5)->wheres($wheres)->select(false));
         print_r($dao->getLastSql());
     }
 }

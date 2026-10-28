@@ -6,10 +6,10 @@ use think\Db;
 class Dao {
 
 	protected $db = null;
-    protected $command = array();
+    protected $command = [];
 
     public function __construct($link_tag='main'){
-        $link_tag = 0 !== strpos(strtolower($link_tag),'database.') ? sprintf("database.%s",$link_tag):$link_tag;
+        $link_tag = !str_starts_with(strtolower($link_tag), 'database.') ? sprintf("database.%s",$link_tag):$link_tag;
         $this->db = Db::connect($link_tag);
     }
 	
@@ -21,11 +21,11 @@ class Dao {
         return $this->db;
     }
 
-    public function __call($method,$params=array()){
-    	return call_user_func_array(array($this->db,$method), $params);
+    public function __call($method,$params=[]){
+    	return call_user_func_array([$this->db,$method], $params);
     }
 
-    public function prepare($command,$params=array()){
+    public function prepare($command,$params=[]){
         if(func_num_args()!=2 || !is_array($params)){
             $_args = func_get_args();
             $command = array_shift($_args);
@@ -34,7 +34,7 @@ class Dao {
         $table_prefix = $this->db->getConfig('prefix');
         $command = preg_replace("/{{([^\s]+)}}/i", $table_prefix.'\\1', $command);
 
-        $this->command = array($command,$params);
+        $this->command = [$command,$params];
         return $this;
     }
 
@@ -48,11 +48,11 @@ class Dao {
 
     public function fetchMap($key_field,$val_field=null){
         $lists = $this->fetchAll();
-        $maps = array();
+        $maps = [];
         if(is_array($lists) && $key_field){
             foreach($lists as $row){
                 if(isset($row[$key_field])){
-                    $maps[$row[$key_field]] = $val_field ? (isset($row[$val_field]) ? $row[$val_field] : null) : $row;
+                    $maps[$row[$key_field]] = $val_field ? ($row[$val_field] ?? null) : $row;
                 }
             }
         }
@@ -71,12 +71,12 @@ class Dao {
         if($page_size){
             $page_config['list_rows'] = $page_size;
         }
-        list($command,$params) = $this->command;
+        [$command, $params] = $this->command;
         return $this->db->table(sprintf("(%s) as a ",$command))->bind($params)->paginate($page_size,false,$page_config);
     }
 
     public function execute(){
-        list($command,$params) = array_values($this->command);
+        [$command, $params] = array_values($this->command);
         $this->command = null;
 
         return $this->db->execute($command,$params);
@@ -93,7 +93,7 @@ class Dao {
     }
 
     private function query(){
-        list($command,$params) = array_values($this->command);
+        [$command, $params] = array_values($this->command);
         $this->command = null;
 
         return $this->db->query($command,$params);

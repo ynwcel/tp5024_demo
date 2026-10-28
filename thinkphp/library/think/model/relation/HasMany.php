@@ -87,9 +87,7 @@ class HasMany extends Relation
             $attr = Loader::parseName($relation);
             // 关联数据封装
             foreach ($resultSet as $result) {
-                if (!isset($data[$result->$localKey])) {
-                    $data[$result->$localKey] = [];
-                }
+                $data[$result->$localKey] ??= [];
 
                 foreach ($data[$result->$localKey] as &$relationModel) {
                     $relationModel->setParent(clone $result);
@@ -116,9 +114,7 @@ class HasMany extends Relation
         if (isset($result->$localKey)) {
             $data = $this->eagerlyOneToMany($this->query, [$this->foreignKey => $result->$localKey], $relation, $subRelation, $closure);
             // 关联数据封装
-            if (!isset($data[$result->$localKey])) {
-                $data[$result->$localKey] = [];
-            }
+            $data[$result->$localKey] ??= [];
 
             foreach ($data[$result->$localKey] as &$relationModel) {
                 $relationModel->setParent(clone $result);
@@ -239,7 +235,7 @@ class HasMany extends Relation
     public function saveAll(array $dataSet)
     {
         $result = false;
-        foreach ($dataSet as $key => $data) {
+        foreach ($dataSet as $data) {
             $result = $this->save($data);
         }
         return $result;
@@ -257,7 +253,7 @@ class HasMany extends Relation
     public function has($operator = '>=', $count = 1, $id = '*', $joinType = 'INNER')
     {
         $table    = $this->query->getTable();
-        $model    = basename(str_replace('\\', '/', get_class($this->parent)));
+        $model    = basename(str_replace('\\', '/', $this->parent::class));
         $relation = basename(str_replace('\\', '/', $this->model));
 
         return $this->parent->db()
@@ -278,12 +274,12 @@ class HasMany extends Relation
     public function hasWhere($where = [], $fields = null)
     {
         $table    = $this->query->getTable();
-        $model    = basename(str_replace('\\', '/', get_class($this->parent)));
+        $model    = basename(str_replace('\\', '/', $this->parent::class));
         $relation = basename(str_replace('\\', '/', $this->model));
 
         if (is_array($where)) {
             foreach ($where as $key => $val) {
-                if (false === strpos($key, '.')) {
+                if (!str_contains($key, '.')) {
                     $where[$relation . '.' . $key] = $val;
                     unset($where[$key]);
                 }

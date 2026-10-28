@@ -116,7 +116,7 @@ abstract class Relation
             }
 
             foreach ($fields as &$field) {
-                if (false === strpos($field, '.')) {
+                if (!str_contains($field, '.')) {
                     $field = $model . '.' . $field;
                 }
             }
@@ -149,7 +149,7 @@ abstract class Relation
                 return $result;
             }
         } else {
-            throw new Exception('method not exists:' . __CLASS__ . '->' . $method);
+            throw new Exception('method not exists:' . self::class . '->' . $method);
         }
     }
 }

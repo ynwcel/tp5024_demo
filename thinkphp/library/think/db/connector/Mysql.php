@@ -54,8 +54,8 @@ class Mysql extends Connection
      */
     public function getFields($tableName)
     {
-        list($tableName) = explode(' ', $tableName);
-        if (false === strpos($tableName, '`')) {
+        [$tableName] = explode(' ', $tableName);
+        if (!str_contains($tableName, '`')) {
             if (strpos($tableName, '.')) {
                 $tableName = str_replace('.', '`.`', $tableName);
             }
@@ -66,7 +66,7 @@ class Mysql extends Connection
         $result = $pdo->fetchAll(PDO::FETCH_ASSOC);
         $info   = [];
         if ($result) {
-            foreach ($result as $key => $val) {
+            foreach ($result as $val) {
                 $val                 = array_change_key_case($val);
                 $info[$val['field']] = [
                     'name'    => $val['field'],

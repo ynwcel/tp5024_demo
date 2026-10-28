@@ -48,7 +48,7 @@ class Schema extends Command
             $list = is_dir($path) ? scandir($path) : [];
             $app  = App::$namespace;
             foreach ($list as $file) {
-                if (0 === strpos($file, '.')) {
+                if (str_starts_with($file, '.')) {
                     continue;
                 }
                 $class = '\\' . $app . '\\' . $module . '\\model\\' . pathinfo($file, PATHINFO_FILENAME);
@@ -70,7 +70,7 @@ class Schema extends Command
             $path = APP_PATH . 'model';
             $list = is_dir($path) ? scandir($path) : [];
             foreach ($list as $file) {
-                if (0 === strpos($file, '.')) {
+                if (str_starts_with($file, '.')) {
                     continue;
                 }
                 $class = '\\' . $app . '\\model\\' . pathinfo($file, PATHINFO_FILENAME);

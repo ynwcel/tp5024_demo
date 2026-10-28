@@ -35,8 +35,6 @@ class Query
     protected $connection;
     // 数据库Builder对象实例
     protected $builder;
-    // 当前模型类名称
-    protected $model;
     // 当前数据表名称（含前缀）
     protected $table = '';
     // 当前数据表名称（不含前缀）
@@ -62,11 +60,10 @@ class Query
      * @param Connection $connection 数据库对象实例
      * @param Model      $model      模型对象
      */
-    public function __construct(Connection $connection = null, $model = null)
+    public function __construct(Connection $connection = null, protected $model = null)
     {
         $this->connection = $connection ?: Db::connect([], true);
         $this->prefix     = $this->connection->getConfig('prefix');
-        $this->model      = $model;
         // 设置当前连接的Builder对象
         $this->setBuilder();
     }
@@ -100,7 +97,7 @@ class Query
             call_user_func_array([$this->model, $method], $args);
             return $this;
         } else {
-            throw new Exception('method not exist:' . __CLASS__ . '->' . $method);
+            throw new Exception('method not exist:' . self::class . '->' . $method);
         }
     }
 
@@ -160,7 +157,7 @@ class Query
         if ($allTable) {
             $table = '*';
         } else {
-            $table = isset($this->options['table']) ? $this->options['table'] : $this->getTable();
+            $table = $this->options['table'] ?? $this->getTable();
         }
 
         static::$readMaster[$table] = true;
@@ -230,11 +227,9 @@ class Query
      */
     public function parseSqlTable($sql)
     {
-        if (false !== strpos($sql, '__')) {
+        if (str_contains($sql, '__')) {
             $prefix = $this->prefix;
-            $sql    = preg_replace_callback("/__([A-Z0-9_-]+)__/sU", function ($match) use ($prefix) {
-                return $prefix . strtolower($match[1]);
-            }, $sql);
+            $sql    = preg_replace_callback("/__([A-Z0-9_-]+)__/sU", fn($match) => $prefix . strtolower($match[1]), $sql);
         }
         return $sql;
     }
@@ -504,7 +499,7 @@ class Query
                     $key2   = $fields ? array_shift($fields) : '';
                     $key    = $key ?: $key1;
                     if (strpos($key, '.')) {
-                        list($alias, $key) = explode('.', $key);
+                        [$alias, $key] = explode('.', $key);
                     }
                     foreach ($resultSet as $val) {
                         if ($count > 2) {
@@ -566,7 +561,7 @@ class Query
     public function aggregate($aggregate, $field, $force = false)
     {
         if (0 === stripos($field, 'DISTINCT ')) {
-            list($distinct, $field) = explode(' ', $field);
+            [$distinct, $field] = explode(' ', $field);
         }
 
         if (!preg_match('/^[\w\.\+\-\*]+$/', $field)) {
@@ -742,9 +737,9 @@ class Query
     {
         if (empty($condition)) {
             // 如果为组数，则循环调用join
-            foreach ($join as $key => $value) {
+            foreach ($join as $value) {
                 if (is_array($value) && 2 <= count($value)) {
-                    $this->join($value[0], $value[1], isset($value[2]) ? $value[2] : $type);
+                    $this->join($value[0], $value[1], $value[2] ?? $type);
                 }
             }
         } else {
@@ -770,21 +765,21 @@ class Query
             $alias = array_shift($join);
         } else {
             $join = trim($join);
-            if (false !== strpos($join, '(')) {
+            if (str_contains($join, '(')) {
                 // 使用子查询
                 $table = $join;
             } else {
                 $prefix = $this->prefix;
                 if (strpos($join, ' ')) {
                     // 使用别名
-                    list($table, $alias) = explode(' ', $join);
+                    [$table, $alias] = explode(' ', $join);
                 } else {
                     $table = $join;
-                    if (false === strpos($join, '.') && 0 !== strpos($join, '__')) {
+                    if (!str_contains($join, '.') && !str_starts_with($join, '__')) {
                         $alias = $join;
                     }
                 }
-                if ($prefix && false === strpos($table, '.') && 0 !== strpos($table, $prefix) && 0 !== strpos($table, '__')) {
+                if ($prefix && !str_contains($table, '.') && !str_starts_with($table, $prefix) && !str_starts_with($table, '__')) {
                     $table = $this->getTable($table);
                 }
             }
@@ -841,11 +836,11 @@ class Query
         }
         if (true === $field) {
             // 获取全部字段
-            $fields = $this->getTableInfo($tableName ?: (isset($this->options['table']) ? $this->options['table'] : ''), 'fields');
+            $fields = $this->getTableInfo($tableName ?: ($this->options['table'] ?? ''), 'fields');
             $field  = $fields ?: ['*'];
         } elseif ($except) {
             // 字段排除
-            $fields = $this->getTableInfo($tableName ?: (isset($this->options['table']) ? $this->options['table'] : ''), 'fields');
+            $fields = $this->getTableInfo($tableName ?: ($this->options['table'] ?? ''), 'fields');
             $field  = $fields ? array_diff($fields, $field) : $field;
         }
         if ($tableName) {
@@ -970,8 +965,8 @@ class Query
     {
         $this->options['view'] = true;
         if (is_array($join) && key($join) === 0) {
-            foreach ($join as $key => $val) {
-                $this->view($val[0], $val[1], isset($val[2]) ? $val[2] : null, isset($val[3]) ? $val[3] : 'INNER');
+            foreach ($join as $val) {
+                $this->view($val[0], $val[1], $val[2] ?? null, $val[3] ?? 'INNER');
             }
         } else {
             $fields = [];
@@ -1043,7 +1038,7 @@ class Query
                 $this->whereRaw($where);
             }elseif(count($where)>0){
                 ## 条件不包括 ? 表达式 
-                if(strpos(current($where),'?')===false){
+                if(!str_contains(current($where),'?')){
                     $p_where = [];
                     ## 原始的条件
                     if(count($where)<=3){
@@ -1060,7 +1055,7 @@ class Query
                     $field = array_shift($where);
                     $p_idx = 1;
                     $p_binds = [];
-                    while(strpos($field,'?')!==false){
+                    while(str_contains($field,'?')){
                         $p_name = sprintf("arg_%s_%s",$m_idx,$p_idx);
                         $field = preg_replace('/\?/',sprintf(":%s",$p_name),$field,1);
                         $p_binds[$p_name] = $this->raw(array_shift($where));
@@ -1393,9 +1388,7 @@ class Query
         }
 
         if (!empty($where)) {
-            if (!isset($this->options['where'][$logic])) {
-                $this->options['where'][$logic] = [];
-            }
+            $this->options['where'][$logic] ??= [];
             if (is_string($field) && $this->checkMultiField($field, $logic)) {
                 $where[$field] = $this->options['multi'][$logic][$field];
             } elseif (is_array($field)) {
@@ -1464,7 +1457,7 @@ class Query
     public function limit($offset, $length = null)
     {
         if (is_null($length) && strpos($offset, ',')) {
-            list($offset, $length) = explode(',', $offset);
+            [$offset, $length] = explode(',', $offset);
         }
         $this->options['limit'] = intval($offset) . ($length ? ',' . intval($length) : '');
         return $this;
@@ -1480,7 +1473,7 @@ class Query
     public function page($page, $listRows = null)
     {
         if (is_null($listRows) && strpos($page, ',')) {
-            list($page, $listRows) = explode(',', $page);
+            [$page, $listRows] = explode(',', $page);
         }
         $this->options['page'] = [intval($page), intval($listRows)];
         return $this;
@@ -1516,7 +1509,7 @@ class Query
         }
 
         /** @var Paginator $class */
-        $class = false !== strpos($config['type'], '\\') ? $config['type'] : '\\think\\paginator\\driver\\' . ucwords($config['type']);
+        $class = str_contains($config['type'], '\\') ? $config['type'] : '\\think\\paginator\\driver\\' . ucwords($config['type']);
         $page  = isset($config['page']) ? (int) $config['page'] : call_user_func([
             $class,
             'getCurrentPage',
@@ -1524,7 +1517,7 @@ class Query
 
         $page = $page < 1 ? 1 : $page;
 
-        $config['path'] = isset($config['path']) ? $config['path'] : call_user_func([$class, 'getCurrentPath']);
+        $config['path'] ??= call_user_func([$class, 'getCurrentPath']);
 
         if (!isset($total) && !$simple) {
             $options = $this->getOptions();
@@ -1558,7 +1551,7 @@ class Query
                 $tables = explode(',', $table);
                 $table  = [];
                 foreach ($tables as $item) {
-                    list($item, $alias) = explode(' ', trim($item));
+                    [$item, $alias] = explode(' ', trim($item));
                     if ($alias) {
                         $this->alias([$item => $alias]);
                         $table[$item] = $alias;
@@ -1567,7 +1560,7 @@ class Query
                     }
                 }
             } elseif (strpos($table, ' ')) {
-                list($table, $alias) = explode(' ', $table);
+                [$table, $alias] = explode(' ', $table);
 
                 $table = [$table => $alias];
                 $this->alias($table);
@@ -1635,9 +1628,7 @@ class Query
                 }
             }
         }
-        if (!isset($this->options['order'])) {
-            $this->options['order'] = [];
-        }
+        $this->options['order'] ??= [];
         if (is_array($field)) {
             $this->options['order'] = array_merge($this->options['order'], $field);
         } else {
@@ -1746,7 +1737,7 @@ class Query
     {
         if (is_array($alias)) {
             foreach ($alias as $key => $val) {
-                if (false !== strpos($key, '__')) {
+                if (str_contains($key, '__')) {
                     $table = $this->parseSqlTable($key);
                 } else {
                     $table = $key;
@@ -1756,7 +1747,7 @@ class Query
         } else {
             if (isset($this->options['table'])) {
                 $table = is_array($this->options['table']) ? key($this->options['table']) : $this->options['table'];
-                if (false !== strpos($table, '__')) {
+                if (str_contains($table, '__')) {
                     $table = $this->parseSqlTable($table);
                 }
             } else {
@@ -1890,38 +1881,17 @@ class Query
                 $range = $op;
             } else {
                 // 使用日期表达式
-                switch (strtolower($op)) {
-                    case 'today':
-                    case 'd':
-                        $range = ['today', 'tomorrow'];
-                        break;
-                    case 'week':
-                    case 'w':
-                        $range = ['this week 00:00:00', 'next week 00:00:00'];
-                        break;
-                    case 'month':
-                    case 'm':
-                        $range = ['first Day of this month 00:00:00', 'first Day of next month 00:00:00'];
-                        break;
-                    case 'year':
-                    case 'y':
-                        $range = ['this year 1/1', 'next year 1/1'];
-                        break;
-                    case 'yesterday':
-                        $range = ['yesterday', 'today'];
-                        break;
-                    case 'last week':
-                        $range = ['last week 00:00:00', 'this week 00:00:00'];
-                        break;
-                    case 'last month':
-                        $range = ['first Day of last month 00:00:00', 'first Day of this month 00:00:00'];
-                        break;
-                    case 'last year':
-                        $range = ['last year 1/1', 'this year 1/1'];
-                        break;
-                    default:
-                        $range = $op;
-                }
+                $range = match (strtolower($op)) {
+                    'today', 'd' => ['today', 'tomorrow'],
+                    'week', 'w' => ['this week 00:00:00', 'next week 00:00:00'],
+                    'month', 'm' => ['first Day of this month 00:00:00', 'first Day of next month 00:00:00'],
+                    'year', 'y' => ['this year 1/1', 'next year 1/1'],
+                    'yesterday' => ['yesterday', 'today'],
+                    'last week' => ['last week 00:00:00', 'this week 00:00:00'],
+                    'last month' => ['first Day of last month 00:00:00', 'first Day of this month 00:00:00'],
+                    'last year' => ['last year 1/1', 'this year 1/1'],
+                    default => $op,
+                };
             }
             $op = is_array($range) ? 'between' : '>';
         }
@@ -1957,7 +1927,7 @@ class Query
             return [];
         }
 
-        list($guid) = explode(' ', $tableName);
+        [$guid] = explode(' ', $tableName);
         $db         = $this->getConfig('database');
         if (!isset(self::$info[$db . '.' . $guid])) {
             if (!strpos($guid, '.')) {
@@ -2041,7 +2011,7 @@ class Query
      */
     protected function getFieldBindType($type)
     {
-        if (0 === strpos($type, 'set') || 0 === strpos($type, 'enum')) {
+        if (str_starts_with($type, 'set') || str_starts_with($type, 'enum')) {
             $bind = PDO::PARAM_STR;
         } elseif (preg_match('/(int|double|float|decimal|real|numeric|serial|bit)/is', $type)) {
             $bind = PDO::PARAM_INT;
@@ -2105,7 +2075,7 @@ class Query
         if ('' === $name) {
             return $this->options;
         } else {
-            return isset($this->options[$name]) ? $this->options[$name] : null;
+            return $this->options[$name] ?? null;
         }
     }
 
@@ -2142,7 +2112,7 @@ class Query
                 $relation    = $key;
             } elseif (is_string($relation) && strpos($relation, '.')) {
                 $with[$key]                   = $relation;
-                list($relation, $subRelation) = explode('.', $relation, 2);
+                [$relation, $subRelation] = explode('.', $relation, 2);
             }
 
             /** @var Relation $model */
@@ -2273,7 +2243,7 @@ class Query
             $key = isset($alias) ? $alias . '.' . $pk : $pk;
             // 根据主键查询
             if (is_array($data)) {
-                $where[$key] = isset($data[$pk]) ? $data[$pk] : ['in', $data];
+                $where[$key] = $data[$pk] ?? ['in', $data];
             } else {
                 $where[$key] = strpos($data, ',') ? ['IN', $data] : $data;
             }
@@ -2323,9 +2293,9 @@ class Query
         }
 
         // 执行操作
-        $result = 0 === $sql ? 0 : $this->execute($sql, $bind, $this);
+        $result = 0 === $sql ? 0 : $this->execute($sql, $bind);
         if ($result) {
-            $sequence  = $sequence ?: (isset($options['sequence']) ? $options['sequence'] : null);
+            $sequence  = $sequence ?: ($options['sequence'] ?? null);
             $lastInsId = $this->getLastInsID($sequence);
             if ($lastInsId) {
                 $pk = $this->getPk($options);
@@ -2389,10 +2359,10 @@ class Query
             return $this->connection->getRealSql($sql, $bind);
         } elseif (is_array($sql)) {
             // 执行操作
-            return $this->batchQuery($sql, $bind, $this);
+            return $this->batchQuery($sql, $bind);
         } else {
             // 执行操作
-            return $this->execute($sql, $bind, $this);
+            return $this->execute($sql, $bind);
         }
     }
 
@@ -2418,7 +2388,7 @@ class Query
             return $this->connection->getRealSql($sql, $bind);
         } else {
             // 执行操作
-            return $this->execute($sql, $bind, $this);
+            return $this->execute($sql, $bind);
         }
     }
 
@@ -2443,9 +2413,7 @@ class Query
             // 如果存在主键数据 则自动作为更新条件
             if (is_string($pk) && isset($data[$pk])) {
                 $where[$pk] = $data[$pk];
-                if (!isset($key)) {
-                    $key = 'think:' . $options['table'] . '|' . $data[$pk];
-                }
+                $key ??= 'think:' . $options['table'] . '|' . $data[$pk];
                 unset($data[$pk]);
             } elseif (is_array($pk)) {
                 // 增加复合主键支持
@@ -2485,12 +2453,12 @@ class Query
                 Cache::clear($options['cache']['tag']);
             }
             // 执行操作
-            $result = '' == $sql ? 0 : $this->execute($sql, $bind, $this);
+            $result = '' == $sql ? 0 : $this->execute($sql, $bind);
             if ($result) {
                 if (is_string($pk) && isset($where[$pk])) {
                     $data[$pk] = $where[$pk];
                 } elseif (is_string($pk) && isset($key) && strpos($key, '|')) {
-                    list($a, $val) = explode('|', $key);
+                    [$a, $val] = explode('|', $key);
                     $data[$pk]     = $val;
                 }
                 $options['data'] = $data;
@@ -2663,7 +2631,7 @@ class Query
 
         try {
             return md5($prefix . serialize($options) . serialize($bind));
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             throw new Exception('closure not support cache(true)');
         }
     }
@@ -2721,7 +2689,7 @@ class Query
             if (is_string($pk)) {
                 if (!is_array($data)) {
                     if (isset($key) && strpos($key, '|')) {
-                        list($a, $val) = explode('|', $key);
+                        [$a, $val] = explode('|', $key);
                         $item[$pk]     = $val;
                     } else {
                         $item[$pk] = $data;
@@ -2740,7 +2708,7 @@ class Query
                     // 返回PDOStatement对象
                     return $resultSet;
                 }
-                $result = isset($resultSet[0]) ? $resultSet[0] : null;
+                $result = $resultSet[0] ?? null;
             }
 
             if (isset($cache) && $result) {
@@ -2754,7 +2722,7 @@ class Query
             if (!empty($this->model)) {
                 // 返回模型对象
                 $result = $this->model->newInstance($result);
-                $result->isUpdate(true, isset($options['where']['AND']) ? $options['where']['AND'] : null);
+                $result->isUpdate(true, $options['where']['AND'] ?? null);
                 // 关联查询
                 if (!empty($options['relation'])) {
                     $result->relationQuery($options['relation']);
@@ -2784,7 +2752,7 @@ class Query
     protected function throwNotFound($options = [])
     {
         if (!empty($this->model)) {
-            $class = get_class($this->model);
+            $class = $this->model::class;
             throw new ModelNotFoundException('model data Not Found:' . $class, $class, $options);
         } else {
             $table = is_array($options['table']) ? key($options['table']) : $options['table'];
@@ -2850,7 +2818,7 @@ class Query
             $query = $this->options($options)->page($times, $count);
         } else {
             if (strpos($column, '.')) {
-                list($alias, $key) = explode('.', $column);
+                [$alias, $key] = explode('.', $column);
             } else {
                 $key = $column;
             }
@@ -2957,10 +2925,10 @@ class Query
             Cache::clear($options['cache']['tag']);
         }
         // 执行操作
-        $result = $this->execute($sql, $bind, $this);
+        $result = $this->execute($sql, $bind);
         if ($result) {
             if (!is_array($data) && is_string($pk) && isset($key) && strpos($key, '|')) {
-                list($a, $val) = explode('|', $key);
+                [$a, $val] = explode('|', $key);
                 $item[$pk]     = $val;
                 $data          = $item;
             }
@@ -3007,7 +2975,7 @@ class Query
                 foreach ($options['order'] as $key => $val) {
                     if (is_numeric($key)) {
                         if (strpos($val, ' ')) {
-                            list($field, $sort) = explode(' ', $val);
+                            [$field, $sort] = explode(' ', $val);
                             if (array_key_exists($field, $options['map'])) {
                                 $options['order'][$options['map'][$field]] = $sort;
                                 unset($options['order'][$key]);
@@ -3024,22 +2992,14 @@ class Query
             }
         }
 
-        if (!isset($options['field'])) {
-            $options['field'] = '*';
-        }
+        $options['field'] ??= '*';
 
-        if (!isset($options['data'])) {
-            $options['data'] = [];
-        }
+        $options['data'] ??= [];
 
-        if (!isset($options['strict'])) {
-            $options['strict'] = $this->getConfig('fields_strict');
-        }
+        $options['strict'] ??= $this->getConfig('fields_strict');
 
         foreach (['master', 'lock', 'fetch_pdo', 'fetch_sql', 'distinct'] as $name) {
-            if (!isset($options[$name])) {
-                $options[$name] = false;
-            }
+            $options[$name] ??= false;
         }
 
         if (isset(static::$readMaster['*']) || (is_string($options['table']) && isset(static::$readMaster[$options['table']]))) {
@@ -3047,14 +3007,12 @@ class Query
         }
 
         foreach (['join', 'union', 'group', 'having', 'limit', 'order', 'force', 'comment'] as $name) {
-            if (!isset($options[$name])) {
-                $options[$name] = '';
-            }
+            $options[$name] ??= '';
         }
 
         if (isset($options['page'])) {
             // 根据页数计算limit
-            list($page, $listRows) = $options['page'];
+            [$page, $listRows] = $options['page'];
             $page                  = $page > 0 ? $page : 1;
             $listRows              = $listRows > 0 ? $listRows : (is_numeric($options['limit']) ? $options['limit'] : 20);
             $offset                = $listRows * ($page - 1);

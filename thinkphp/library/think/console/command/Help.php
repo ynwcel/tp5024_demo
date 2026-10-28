@@ -56,9 +56,7 @@ EOF
      */
     protected function execute(Input $input, Output $output)
     {
-        if (null === $this->command) {
-            $this->command = $this->getConsole()->find($input->getArgument('command_name'));
-        }
+        $this->command ??= $this->getConsole()->find($input->getArgument('command_name'));
 
         $output->describe($this->command, [
             'raw_text' => $input->getOption('raw'),

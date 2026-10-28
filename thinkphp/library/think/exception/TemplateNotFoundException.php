@@ -13,12 +13,9 @@ namespace think\exception;
 
 class TemplateNotFoundException extends \RuntimeException
 {
-    protected $template;
-
-    public function __construct($message, $template = '')
+    public function __construct($message, protected $template = '')
     {
         $this->message  = $message;
-        $this->template = $template;
     }
 
     /**

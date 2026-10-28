@@ -20,12 +20,12 @@ class Controller extends TpController{
         $content = parent::fetch($template, $vars, $replace, $config);
         if($this->view_layout){
             $view_layout = trim($this->view_layout);
-            if(\strpos($view_layout,'__layouts/')!==0){
+            if(!str_starts_with($view_layout, '__layouts/')){
                 $view_layout = \sprintf("__layouts/%s",$view_layout);
             }
-            $layout_vars = array(
+            $layout_vars = [
                 'subview_content'=>$content,
-            );
+            ];
             $content = parent::fetch($view_layout,$layout_vars,$replace,$config);
         }
         return $content;

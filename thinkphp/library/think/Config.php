@@ -33,7 +33,7 @@ class Config
     {
         self::$range = $range;
 
-        if (!isset(self::$config[$range])) self::$config[$range] = [];
+        self::$config[$range] ??= [];
     }
 
     /**
@@ -51,7 +51,7 @@ class Config
 
         if (empty($type)) $type = pathinfo($config, PATHINFO_EXTENSION);
 
-        $class = false !== strpos($type, '\\') ?
+        $class = str_contains($type, '\\') ?
             $type :
             '\\think\\config\\driver\\' . ucwords($type);
 
@@ -70,7 +70,7 @@ class Config
     {
         $range = $range ?: self::$range;
 
-        if (!isset(self::$config[$range])) self::$config[$range] = [];
+        self::$config[$range] ??= [];
 
         if (is_file($file)) {
             $name = strtolower($name);
@@ -129,7 +129,7 @@ class Config
         // 非二级配置时直接返回
         if (!strpos($name, '.')) {
             $name = strtolower($name);
-            return isset(self::$config[$range][$name]) ? self::$config[$range][$name] : null;
+            return self::$config[$range][$name] ?? null;
         }
 
         // 二维数组设置和获取支持
@@ -144,9 +144,7 @@ class Config
             is_file($file) && self::load($file, $name[0]);
         }
 
-        return isset(self::$config[$range][$name[0]][$name[1]]) ?
-            self::$config[$range][$name[0]][$name[1]] :
-            null;
+        return self::$config[$range][$name[0]][$name[1]] ?? null;
     }
 
     /**
@@ -161,7 +159,7 @@ class Config
     {
         $range = $range ?: self::$range;
 
-        if (!isset(self::$config[$range])) self::$config[$range] = [];
+        self::$config[$range] ??= [];
 
         // 字符串则表示单个配置设置
         if (is_string($name)) {

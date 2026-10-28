@@ -20,12 +20,6 @@ use think\model\Relation;
 
 class MorphMany extends Relation
 {
-    // 多态字段
-    protected $morphKey;
-    protected $morphType;
-    // 多态类型
-    protected $type;
-
     /**
      * 构造函数
      * @access public
@@ -35,13 +29,10 @@ class MorphMany extends Relation
      * @param string $morphType 多态字段名
      * @param string $type      多态类型
      */
-    public function __construct(Model $parent, $model, $morphKey, $morphType, $type)
+    public function __construct(Model $parent, $model, protected $morphKey, protected $morphType, protected $type)
     {
         $this->parent    = $parent;
         $this->model     = $model;
-        $this->type      = $type;
-        $this->morphKey  = $morphKey;
-        $this->morphType = $morphType;
         $this->query     = (new $model)->db();
     }
 
@@ -124,9 +115,7 @@ class MorphMany extends Relation
             $attr = Loader::parseName($relation);
             // 关联数据封装
             foreach ($resultSet as $result) {
-                if (!isset($data[$result->$pk])) {
-                    $data[$result->$pk] = [];
-                }
+                $data[$result->$pk] ??= [];
                 foreach ($data[$result->$pk] as &$relationModel) {
                     $relationModel->setParent(clone $result);
                     $relationModel->isUpdate(true);
@@ -154,9 +143,7 @@ class MorphMany extends Relation
                 $this->morphType => $this->type,
             ], $relation, $subRelation, $closure);
 
-            if (!isset($data[$result->$pk])) {
-                $data[$result->$pk] = [];
-            }
+            $data[$result->$pk] ??= [];
 
             foreach ($data[$result->$pk] as &$relationModel) {
                 $relationModel->setParent(clone $result);
@@ -289,7 +276,7 @@ class MorphMany extends Relation
     public function saveAll(array $dataSet)
     {
         $result = false;
-        foreach ($dataSet as $key => $data) {
+        foreach ($dataSet as $data) {
             $result = $this->save($data);
         }
         return $result;

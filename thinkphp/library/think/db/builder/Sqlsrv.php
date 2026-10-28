@@ -44,7 +44,7 @@ class Sqlsrv extends Builder
             if ($val instanceof Expression) {
                 $array[] = $val->getValue();
             } elseif (is_numeric($key)) {
-                if (false === strpos($val, '(')) {
+                if (!str_contains($val, '(')) {
                     $array[] = $this->parseKey($val, $options);
                 } elseif ('[rand]' == $val) {
                     $array[] = $this->parseRand();
@@ -86,7 +86,7 @@ class Sqlsrv extends Builder
         }
         $key = trim($key);
         if (strpos($key, '.') && !preg_match('/[,\'\"\(\)\[\s]/', $key)) {
-            list($table, $key) = explode('.', $key, 2);
+            [$table, $key] = explode('.', $key, 2);
             if ('__TABLE__' == $table) {
                 $table = $this->query->getTable();
             }

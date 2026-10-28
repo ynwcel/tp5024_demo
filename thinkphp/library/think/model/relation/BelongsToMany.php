@@ -47,7 +47,7 @@ class BelongsToMany extends Relation
         $this->model      = $model;
         $this->foreignKey = $foreignKey;
         $this->localKey   = $localKey;
-        if (false !== strpos($table, '\\')) {
+        if (str_contains($table, '\\')) {
             $this->pivotName = $table;
             $this->middle    = basename(str_replace('\\', '/', $table));
         } else {
@@ -56,7 +56,7 @@ class BelongsToMany extends Relation
         $this->query = (new $model)->db();
         $this->pivot = $this->newPivot();
 
-        if ('think\model\Pivot' == get_class($this->pivot)) {
+        if ('think\model\Pivot' == $this->pivot::class) {
             $this->pivot->name($this->middle);
         }
     }
@@ -125,7 +125,7 @@ class BelongsToMany extends Relation
             $pivot = [];
             foreach ($model->getData() as $key => $val) {
                 if (strpos($key, '__')) {
-                    list($name, $attr) = explode('__', $key, 2);
+                    [$name, $attr] = explode('__', $key, 2);
                     if ('pivot' == $name) {
                         $pivot[$attr] = $val;
                         unset($model->$key);
@@ -304,9 +304,7 @@ class BelongsToMany extends Relation
             $attr = Loader::parseName($relation);
             // 关联数据封装
             foreach ($resultSet as $result) {
-                if (!isset($data[$result->$pk])) {
-                    $data[$result->$pk] = [];
-                }
+                $data[$result->$pk] ??= [];
 
                 $result->setRelation($attr, $this->resultSetBuild($data[$result->$pk]));
             }
@@ -331,9 +329,7 @@ class BelongsToMany extends Relation
             $data = $this->eagerlyManyToMany(['pivot.' . $this->localKey => $pk], $relation, $subRelation);
 
             // 关联数据封装
-            if (!isset($data[$pk])) {
-                $data[$pk] = [];
-            }
+            $data[$pk] ??= [];
             $result->setRelation(Loader::parseName($relation), $this->resultSetBuild($data[$pk]));
         }
     }
@@ -399,7 +395,7 @@ class BelongsToMany extends Relation
             $pivot = [];
             foreach ($set->getData() as $key => $val) {
                 if (strpos($key, '__')) {
-                    list($name, $attr) = explode('__', $key, 2);
+                    [$name, $attr] = explode('__', $key, 2);
                     if ('pivot' == $name) {
                         $pivot[$attr] = $val;
                         unset($set->$key);
@@ -464,7 +460,7 @@ class BelongsToMany extends Relation
         $result = false;
         foreach ($dataSet as $key => $data) {
             if (!$samePivot) {
-                $pivotData = isset($pivot[$key]) ? $pivot[$key] : [];
+                $pivotData = $pivot[$key] ?? [];
             } else {
                 $pivotData = $pivot;
             }

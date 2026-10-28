@@ -56,7 +56,7 @@ class Command
         $this->configure();
 
         if (!$this->name) {
-            throw new \LogicException(sprintf('The command defined in "%s" cannot have an empty name.', get_class($this)));
+            throw new \LogicException(sprintf('The command defined in "%s" cannot have an empty name.', static::class));
         }
     }
 
@@ -424,9 +424,7 @@ class Command
     {
         $key = $short ? 'short' : 'long';
 
-        if (!isset($this->synopsis[$key])) {
-            $this->synopsis[$key] = trim(sprintf('%s %s', $this->name, $this->definition->getSynopsis($short)));
-        }
+        $this->synopsis[$key] ??= trim(sprintf('%s %s', $this->name, $this->definition->getSynopsis($short)));
 
         return $this->synopsis[$key];
     }
@@ -438,7 +436,7 @@ class Command
      */
     public function addUsage($usage)
     {
-        if (0 !== strpos($usage, $this->name)) {
+        if (!str_starts_with($usage, $this->name)) {
             $usage = sprintf('%s %s', $this->name, $usage);
         }
 

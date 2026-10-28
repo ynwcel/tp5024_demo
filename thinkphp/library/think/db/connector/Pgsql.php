@@ -45,14 +45,14 @@ class Pgsql extends Connection
     public function getFields($tableName)
     {
 
-        list($tableName) = explode(' ', $tableName);
+        [$tableName] = explode(' ', $tableName);
         $sql             = 'select fields_name as "field",fields_type as "type",fields_not_null as "null",fields_key_name as "key",fields_default as "default",fields_default as "extra" from table_msg(\'' . $tableName . '\');';
 
         $pdo    = $this->query($sql, [], false, true);
         $result = $pdo->fetchAll(PDO::FETCH_ASSOC);
         $info   = [];
         if ($result) {
-            foreach ($result as $key => $val) {
+            foreach ($result as $val) {
                 $val                 = array_change_key_case($val);
                 $info[$val['field']] = [
                     'name'    => $val['field'],
@@ -60,7 +60,7 @@ class Pgsql extends Connection
                     'notnull' => (bool) ('' !== $val['null']),
                     'default' => $val['default'],
                     'primary' => !empty($val['key']),
-                    'autoinc' => (0 === strpos($val['extra'], 'nextval(')),
+                    'autoinc' => (str_starts_with($val['extra'], 'nextval(')),
                 ];
             }
         }

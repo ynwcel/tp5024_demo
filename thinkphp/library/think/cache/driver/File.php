@@ -140,9 +140,7 @@ class File extends Driver
      */
     public function set($name, $value, $expire = null)
     {
-        if (is_null($expire)) {
-            $expire = $this->options['expire'];
-        }
+        $expire ??= $this->options['expire'];
         if ($expire instanceof \DateTime) {
             $expire = $expire->getTimestamp() - time();
         }
@@ -217,7 +215,7 @@ class File extends Driver
         $filename = $this->getCacheKey($name);
         try {
             return $this->unlink($filename);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
         }
     }
 

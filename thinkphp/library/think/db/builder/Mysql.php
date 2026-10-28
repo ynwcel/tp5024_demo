@@ -63,9 +63,7 @@ class Mysql extends Builder
             $value    = array_values($data);
             $values[] = '( ' . implode(',', $value) . ' )';
 
-            if (!isset($insertFields)) {
-                $insertFields = array_map([$this, 'parseKey'], array_keys($data));
-            }
+            $insertFields ??= array_map([$this, 'parseKey'], array_keys($data));
         }
 
         return str_replace(
@@ -95,12 +93,12 @@ class Mysql extends Builder
         }
 
         $key = trim($key);
-        if (strpos($key, '$.') && false === strpos($key, '(')) {
+        if (strpos($key, '$.') && !str_contains($key, '(')) {
             // JSON字段支持
-            list($field, $name) = explode('$.', $key);
+            [$field, $name] = explode('$.', $key);
             return 'json_extract(' . $field . ', \'$.' . $name . '\')';
         } elseif (strpos($key, '.') && !preg_match('/[,\'\"\(\)`\s]/', $key)) {
-            list($table, $key) = explode('.', $key, 2);
+            [$table, $key] = explode('.', $key, 2);
             if ('__TABLE__' == $table) {
                 $table = $this->query->getTable();
             }

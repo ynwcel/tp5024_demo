@@ -57,7 +57,7 @@ abstract class OneToOne extends Relation
      */
     public function eagerly(Query $query, $relation, $subRelation, $closure, $first)
     {
-        $name = Loader::parseName(basename(str_replace('\\', '/', get_class($query->getModel()))));
+        $name = Loader::parseName(basename(str_replace('\\', '/', $query->getModel() !== null ? $query->getModel()::class : self::class)));
 
         if ($first) {
             $table = $query->getTable();
@@ -95,7 +95,7 @@ abstract class OneToOne extends Relation
         } elseif (isset($this->option['field'])) {
             $field = $this->option['field'];
         }
-        $query->field(isset($field) ? $field : true, false, $joinTable, $joinAlias, $relation . '__');
+        $query->field($field ?? true, false, $joinTable, $joinAlias, $relation . '__');
     }
 
     /**
@@ -248,7 +248,7 @@ abstract class OneToOne extends Relation
         // 重新组装模型数据
         foreach ($result->getData() as $key => $val) {
             if (strpos($key, '__')) {
-                list($name, $attr) = explode('__', $key, 2);
+                [$name, $attr] = explode('__', $key, 2);
                 if ($name == $relation) {
                     $list[$name][$attr] = $val;
                     unset($result->$key);

@@ -106,8 +106,7 @@ class Cookie
 
         if ($config['setcookie']) {
             setcookie(
-                $name, $value, $expire, $config['path'], $config['domain'],
-                $config['secure'], $config['httponly']
+                $name, $value, ['expires' => $expire, 'path' => $config['path'], 'domain' => $config['domain'], 'secure' => $config['secure'], 'httponly' => $config['httponly']]
             );
         }
 
@@ -144,7 +143,7 @@ class Cookie
     {
         !isset(self::$init) && self::init();
 
-        $prefix = !is_null($prefix) ? $prefix : self::$config['prefix'];
+        $prefix ??= self::$config['prefix'];
 
         return isset($_COOKIE[$prefix . $name]);
     }
@@ -160,7 +159,7 @@ class Cookie
     {
         !isset(self::$init) && self::init();
 
-        $prefix = !is_null($prefix) ? $prefix : self::$config['prefix'];
+        $prefix ??= self::$config['prefix'];
         $key    = $prefix . $name;
 
         if ('' == $name) {
@@ -169,7 +168,7 @@ class Cookie
                 $value = [];
 
                 foreach ($_COOKIE as $k => $val) {
-                    if (0 === strpos($k, $prefix)) {
+                    if (str_starts_with($k, $prefix)) {
                         $value[$k] = $val;
                     }
 
@@ -180,7 +179,7 @@ class Cookie
         } elseif (isset($_COOKIE[$key])) {
             $value = $_COOKIE[$key];
 
-            if (0 === strpos($value, 'think:')) {
+            if (str_starts_with($value, 'think:')) {
                 $value = json_decode(substr($value, 6), true);
                 array_walk_recursive($value, 'self::jsonFormatProtect', 'decode');
             }
@@ -203,13 +202,12 @@ class Cookie
         !isset(self::$init) && self::init();
 
         $config = self::$config;
-        $prefix = !is_null($prefix) ? $prefix : $config['prefix'];
+        $prefix ??= $config['prefix'];
         $name   = $prefix . $name;
 
         if ($config['setcookie']) {
             setcookie(
-                $name, '', $_SERVER['REQUEST_TIME'] - 3600, $config['path'],
-                $config['domain'], $config['secure'], $config['httponly']
+                $name, '', ['expires' => $_SERVER['REQUEST_TIME'] - 3600, 'path' => $config['path'], 'domain' => $config['domain'], 'secure' => $config['secure'], 'httponly' => $config['httponly']]
             );
         }
 
@@ -233,15 +231,14 @@ class Cookie
 
         // 要删除的 cookie 前缀，不指定则删除 config 设置的指定前缀
         $config = self::$config;
-        $prefix = !is_null($prefix) ? $prefix : $config['prefix'];
+        $prefix ??= $config['prefix'];
 
         if ($prefix) {
             foreach ($_COOKIE as $key => $val) {
-                if (0 === strpos($key, $prefix)) {
+                if (str_starts_with($key, $prefix)) {
                     if ($config['setcookie']) {
                         setcookie(
-                            $key, '', $_SERVER['REQUEST_TIME'] - 3600, $config['path'],
-                            $config['domain'], $config['secure'], $config['httponly']
+                            $key, '', ['expires' => $_SERVER['REQUEST_TIME'] - 3600, 'path' => $config['path'], 'domain' => $config['domain'], 'secure' => $config['secure'], 'httponly' => $config['httponly']]
                         );
                     }
 

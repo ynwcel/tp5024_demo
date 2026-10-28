@@ -19,11 +19,6 @@ use think\model\Relation;
 
 class HasManyThrough extends Relation
 {
-    // 中间关联表外键
-    protected $throughKey;
-    // 中间表模型
-    protected $through;
-
     /**
      * 构造函数
      * @access   public
@@ -34,13 +29,11 @@ class HasManyThrough extends Relation
      * @param string $throughKey 关联外键
      * @param string $localKey   关联主键
      */
-    public function __construct(Model $parent, $model, $through, $foreignKey, $throughKey, $localKey)
+    public function __construct(Model $parent, $model, protected $through, $foreignKey, protected $throughKey, $localKey)
     {
         $this->parent     = $parent;
         $this->model      = $model;
-        $this->through    = $through;
         $this->foreignKey = $foreignKey;
-        $this->throughKey = $throughKey;
         $this->localKey   = $localKey;
         $this->query      = (new $model)->db();
     }

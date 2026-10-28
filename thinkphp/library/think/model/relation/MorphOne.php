@@ -19,12 +19,6 @@ use think\model\Relation;
 
 class MorphOne extends Relation
 {
-    // 多态字段
-    protected $morphKey;
-    protected $morphType;
-    // 多态类型
-    protected $type;
-
     /**
      * 构造函数
      * @access public
@@ -34,13 +28,10 @@ class MorphOne extends Relation
      * @param string $morphType 多态字段名
      * @param string $type      多态类型
      */
-    public function __construct(Model $parent, $model, $morphKey, $morphType, $type)
+    public function __construct(Model $parent, $model, protected $morphKey, protected $morphType, protected $type)
     {
         $this->parent    = $parent;
         $this->model     = $model;
-        $this->type      = $type;
-        $this->morphKey  = $morphKey;
-        $this->morphType = $morphType;
         $this->query     = (new $model)->db();
     }
 

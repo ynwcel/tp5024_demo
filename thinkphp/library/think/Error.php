@@ -26,9 +26,9 @@ class Error
     public static function register()
     {
         error_reporting(E_ALL);
-        set_error_handler([__CLASS__, 'appError']);
-        set_exception_handler([__CLASS__, 'appException']);
-        register_shutdown_function([__CLASS__, 'appShutdown']);
+        set_error_handler([self::class, 'appError']);
+        set_exception_handler([self::class, 'appException']);
+        register_shutdown_function([self::class, 'appShutdown']);
     }
 
     /**
@@ -67,8 +67,10 @@ class Error
     {
         $exception = new ErrorException($errno, $errstr, $errfile, $errline);
 
-        // 符合异常处理的则将错误信息托管至 think\exception\ErrorException
-        if (error_reporting() & $errno) {
+        // 致命类错误抛异常，弃用/通知/警告只上报（PHP 8.x 弃用提示极多，抛异常会导致 500）
+        $fatal = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR];
+
+        if (in_array($errno, $fatal, true) && (error_reporting() & $errno)) {
             throw $exception;
         }
 

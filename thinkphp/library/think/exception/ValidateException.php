@@ -13,12 +13,9 @@ namespace think\exception;
 
 class ValidateException extends \RuntimeException
 {
-    protected $error;
-
-    public function __construct($error)
+    public function __construct(protected $error)
     {
-        $this->error   = $error;
-        $this->message = is_array($error) ? implode("\n\r", $error) : $error;
+        $this->message = is_array($this->error) ? implode("\n\r", $this->error) : $this->error;
     }
 
     /**

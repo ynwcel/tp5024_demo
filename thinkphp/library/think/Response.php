@@ -28,9 +28,6 @@ class Response
     // 字符集
     protected $charset = 'utf-8';
 
-    //状态
-    protected $code = 200;
-
     // 输出参数
     protected $options = [];
     // header参数
@@ -46,7 +43,7 @@ class Response
      * @param array $header
      * @param array $options 输出参数
      */
-    public function __construct($data = '', $code = 200, array $header = [], $options = [])
+    public function __construct($data = '', protected $code = 200, array $header = [], $options = [])
     {
         $this->data($data);
         if (!empty($options)) {
@@ -54,7 +51,6 @@ class Response
         }
         $this->contentType($this->contentType, $this->charset);
         $this->header = array_merge($this->header, $header);
-        $this->code   = $code;
     }
 
     /**
@@ -69,7 +65,7 @@ class Response
      */
     public static function create($data = '', $type = '', $code = 200, array $header = [], $options = [])
     {
-        $class = false !== strpos($type, '\\') ? $type : '\\think\\response\\' . ucfirst(strtolower($type));
+        $class = str_contains($type, '\\') ? $type : '\\think\\response\\' . ucfirst(strtolower($type));
         if (class_exists($class)) {
             $response = new $class($data, $code, $header, $options);
         } else {
@@ -284,7 +280,7 @@ class Response
     public function getHeader($name = '')
     {
         if (!empty($name)) {
-            return isset($this->header[$name]) ? $this->header[$name] : null;
+            return $this->header[$name] ?? null;
         } else {
             return $this->header;
         }

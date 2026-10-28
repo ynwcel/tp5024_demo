@@ -42,14 +42,14 @@ class Sqlite extends Connection
      */
     public function getFields($tableName)
     {
-        list($tableName) = explode(' ', $tableName);
+        [$tableName] = explode(' ', $tableName);
         $sql             = 'PRAGMA table_info( ' . $tableName . ' )';
 
         $pdo    = $this->query($sql, [], false, true);
         $result = $pdo->fetchAll(PDO::FETCH_ASSOC);
         $info   = [];
         if ($result) {
-            foreach ($result as $key => $val) {
+            foreach ($result as $val) {
                 $val                = array_change_key_case($val);
                 $info[$val['name']] = [
                     'name'    => $val['name'],

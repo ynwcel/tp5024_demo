@@ -19,15 +19,9 @@ class Timeout extends \RuntimeException
     const TYPE_GENERAL = 1;
     const TYPE_IDLE    = 2;
 
-    private $process;
-    private $timeoutType;
-
-    public function __construct(Process $process, $timeoutType)
+    public function __construct(private Process $process, private $timeoutType)
     {
-        $this->process     = $process;
-        $this->timeoutType = $timeoutType;
-
-        parent::__construct(sprintf('The process "%s" exceeded the timeout of %s seconds.', $process->getCommandLine(), $this->getExceededTimeout()));
+        parent::__construct(sprintf('The process "%s" exceeded the timeout of %s seconds.', $this->process->getCommandLine(), $this->getExceededTimeout()));
     }
 
     public function getProcess()
@@ -47,15 +41,10 @@ class Timeout extends \RuntimeException
 
     public function getExceededTimeout()
     {
-        switch ($this->timeoutType) {
-            case self::TYPE_GENERAL:
-                return $this->process->getTimeout();
-
-            case self::TYPE_IDLE:
-                return $this->process->getIdleTimeout();
-
-            default:
-                throw new \LogicException(sprintf('Unknown timeout type "%d".', $this->timeoutType));
-        }
+        return match ($this->timeoutType) {
+            self::TYPE_GENERAL => $this->process->getTimeout(),
+            self::TYPE_IDLE => $this->process->getIdleTimeout(),
+            default => throw new \LogicException(sprintf('Unknown timeout type "%d".', $this->timeoutType)),
+        };
     }
 }

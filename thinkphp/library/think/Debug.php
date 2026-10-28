@@ -53,9 +53,7 @@ class Debug
      */
     public static function getRangeTime($start, $end, $dec = 6)
     {
-        if (!isset(self::$info[$end])) {
-            self::$info[$end] = microtime(true);
-        }
+        self::$info[$end] ??= microtime(true);
 
         return number_format((self::$info[$end] - self::$info[$start]), $dec);
     }
@@ -91,9 +89,7 @@ class Debug
      */
     public static function getRangeMem($start, $end, $dec = 2)
     {
-        if (!isset(self::$mem['mem'][$end])) {
-            self::$mem['mem'][$end] = memory_get_usage();
-        }
+        self::$mem['mem'][$end] ??= memory_get_usage();
 
         $size = self::$mem['mem'][$end] - self::$mem['mem'][$start];
         $a    = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -137,9 +133,7 @@ class Debug
      */
     public static function getMemPeak($start, $end, $dec = 2)
     {
-        if (!isset(self::$mem['peak'][$end])) {
-            self::$mem['peak'][$end] = memory_get_peak_usage();
-        }
+        self::$mem['peak'][$end] ??= memory_get_peak_usage();
 
         $size = self::$mem['peak'][$end] - self::$mem['peak'][$start];
         $a    = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -221,8 +215,8 @@ class Debug
     public static function inject(Response $response, &$content)
     {
         $config = Config::get('trace');
-        $type   = isset($config['type']) ? $config['type'] : 'Html';
-        $class  = false !== strpos($type, '\\') ? $type : '\\think\\debug\\' . ucwords($type);
+        $type   = $config['type'] ?? 'Html';
+        $class  = str_contains($type, '\\') ? $type : '\\think\\debug\\' . ucwords($type);
 
         unset($config['type']);
 

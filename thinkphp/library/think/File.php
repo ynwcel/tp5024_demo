@@ -101,7 +101,7 @@ class File extends SplFileObject
      */
     public function getInfo($name = '')
     {
-        return isset($this->info[$name]) ? $this->info[$name] : $this->info;
+        return $this->info[$name] ?? $this->info;
     }
 
     /**
@@ -135,9 +135,7 @@ class File extends SplFileObject
      */
     public function hash($type = 'sha1')
     {
-        if (!isset($this->hash[$type])) {
-            $this->hash[$type] = hash_file($type, $this->filename);
-        }
+        $this->hash[$type] ??= hash_file($type, $this->filename);
 
         return $this->hash[$type];
     }
@@ -289,7 +287,7 @@ class File extends SplFileObject
         try {
             $info = getimagesize($image);
             return $info ? $info[2] : false;
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }
@@ -423,26 +421,14 @@ class File extends SplFileObject
      */
     private function error($errorNo)
     {
-        switch ($errorNo) {
-            case 1:
-            case 2:
-                $this->error = 'upload File size exceeds the maximum value';
-                break;
-            case 3:
-                $this->error = 'only the portion of file is uploaded';
-                break;
-            case 4:
-                $this->error = 'no file to uploaded';
-                break;
-            case 6:
-                $this->error = 'upload temp dir not found';
-                break;
-            case 7:
-                $this->error = 'file write error';
-                break;
-            default:
-                $this->error = 'unknown upload error';
-        }
+        $this->error = match ($errorNo) {
+            1, 2 => 'upload File size exceeds the maximum value',
+            3 => 'only the portion of file is uploaded',
+            4 => 'no file to uploaded',
+            6 => 'upload temp dir not found',
+            7 => 'file write error',
+            default => 'unknown upload error',
+        };
 
         return $this;
     }
@@ -455,7 +441,7 @@ class File extends SplFileObject
     public function getError()
     {
         if (is_array($this->error)) {
-            list($msg, $vars) = $this->error;
+            [$msg, $vars] = $this->error;
         } else {
             $msg  = $this->error;
             $vars = [];

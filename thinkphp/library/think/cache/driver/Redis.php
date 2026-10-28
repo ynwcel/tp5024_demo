@@ -88,8 +88,8 @@ class Redis extends Driver
         }
 
         try {
-            $result = 0 === strpos($value, 'think_serialize:') ? unserialize(substr($value, 16)) : $value;
-        } catch (\Exception $e) {
+            $result = str_starts_with($value, 'think_serialize:') ? unserialize(substr($value, 16)) : $value;
+        } catch (\Exception) {
             $result = $default;
         }
 
@@ -106,9 +106,7 @@ class Redis extends Driver
      */
     public function set($name, $value, $expire = null)
     {
-        if (is_null($expire)) {
-            $expire = $this->options['expire'];
-        }
+        $expire ??= $this->options['expire'];
         if ($expire instanceof \DateTime) {
             $expire = $expire->getTimestamp() - time();
         }

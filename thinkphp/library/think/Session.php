@@ -95,7 +95,7 @@ class Session
         }
         if (!empty($config['type'])) {
             // 读取session驱动
-            $class = false !== strpos($config['type'], '\\') ? $config['type'] : '\\think\\session\\driver\\' . ucwords($config['type']);
+            $class = str_contains($config['type'], '\\') ? $config['type'] : '\\think\\session\\driver\\' . ucwords($config['type']);
 
             // 检查驱动类
             if (!class_exists($class) || !session_set_save_handler(new $class($config))) {
@@ -137,10 +137,10 @@ class Session
     {
         empty(self::$init) && self::boot();
 
-        $prefix = !is_null($prefix) ? $prefix : self::$prefix;
+        $prefix ??= self::$prefix;
         if (strpos($name, '.')) {
             // 二维数组赋值
-            list($name1, $name2) = explode('.', $name);
+            [$name1, $name2] = explode('.', $name);
             if ($prefix) {
                 $_SESSION[$prefix][$name1][$name2] = $value;
             } else {
@@ -162,24 +162,24 @@ class Session
     public static function get($name = '', $prefix = null)
     {
         empty(self::$init) && self::boot();
-        $prefix = !is_null($prefix) ? $prefix : self::$prefix;
+        $prefix ??= self::$prefix;
         if ('' == $name) {
             // 获取全部的session
             $value = $prefix ? (!empty($_SESSION[$prefix]) ? $_SESSION[$prefix] : []) : $_SESSION;
         } elseif ($prefix) {
             // 获取session
             if (strpos($name, '.')) {
-                list($name1, $name2) = explode('.', $name);
-                $value               = isset($_SESSION[$prefix][$name1][$name2]) ? $_SESSION[$prefix][$name1][$name2] : null;
+                [$name1, $name2] = explode('.', $name);
+                $value               = $_SESSION[$prefix][$name1][$name2] ?? null;
             } else {
-                $value = isset($_SESSION[$prefix][$name]) ? $_SESSION[$prefix][$name] : null;
+                $value = $_SESSION[$prefix][$name] ?? null;
             }
         } else {
             if (strpos($name, '.')) {
-                list($name1, $name2) = explode('.', $name);
-                $value               = isset($_SESSION[$name1][$name2]) ? $_SESSION[$name1][$name2] : null;
+                [$name1, $name2] = explode('.', $name);
+                $value               = $_SESSION[$name1][$name2] ?? null;
             } else {
-                $value = isset($_SESSION[$name]) ? $_SESSION[$name] : null;
+                $value = $_SESSION[$name] ?? null;
             }
         }
         return $value;
@@ -247,13 +247,13 @@ class Session
     public static function delete($name, $prefix = null)
     {
         empty(self::$init) && self::boot();
-        $prefix = !is_null($prefix) ? $prefix : self::$prefix;
+        $prefix ??= self::$prefix;
         if (is_array($name)) {
             foreach ($name as $key) {
                 self::delete($key, $prefix);
             }
         } elseif (strpos($name, '.')) {
-            list($name1, $name2) = explode('.', $name);
+            [$name1, $name2] = explode('.', $name);
             if ($prefix) {
                 unset($_SESSION[$prefix][$name1][$name2]);
             } else {
@@ -276,7 +276,7 @@ class Session
     public static function clear($prefix = null)
     {
         empty(self::$init) && self::boot();
-        $prefix = !is_null($prefix) ? $prefix : self::$prefix;
+        $prefix ??= self::$prefix;
         if ($prefix) {
             unset($_SESSION[$prefix]);
         } else {
@@ -293,10 +293,10 @@ class Session
     public static function has($name, $prefix = null)
     {
         empty(self::$init) && self::boot();
-        $prefix = !is_null($prefix) ? $prefix : self::$prefix;
+        $prefix ??= self::$prefix;
         if (strpos($name, '.')) {
             // 支持数组
-            list($name1, $name2) = explode('.', $name);
+            [$name1, $name2] = explode('.', $name);
             return $prefix ? isset($_SESSION[$prefix][$name1][$name2]) : isset($_SESSION[$name1][$name2]);
         } else {
             return $prefix ? isset($_SESSION[$prefix][$name]) : isset($_SESSION[$name]);
@@ -312,9 +312,7 @@ class Session
     public static function push($key, $value)
     {
         $array = self::get($key);
-        if (is_null($array)) {
-            $array = [];
-        }
+        $array ??= [];
         $array[] = $value;
         self::set($key, $array);
     }

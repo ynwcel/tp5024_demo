@@ -58,23 +58,21 @@ class TagLib
      */
     protected $valid = false;
 
-    /**
-     * 当前模板对象
-     * @var object
-     * @access protected
-     */
-    protected $tpl;
-
     protected $comparison = [' nheq ' => ' !== ', ' heq ' => ' === ', ' neq ' => ' != ', ' eq ' => ' == ', ' egt ' => ' >= ', ' gt ' => ' > ', ' elt ' => ' <= ', ' lt ' => ' < '];
 
     /**
      * 构造函数
      * @access public
-     * @param \stdClass $template 模板引擎对象
+     * @param \stdClass $tpl 模板引擎对象
      */
-    public function __construct($template)
+    public function __construct(
+        /**
+         * 当前模板对象
+         * @access protected
+         */
+        protected $tpl
+    )
     {
-        $this->tpl = $template;
     }
 
     /**
@@ -132,7 +130,7 @@ class TagLib
             if ($nodes) {
                 $beginArray = [];
                 // 标签替换 从后向前
-                foreach ($nodes as $pos => $node) {
+                foreach ($nodes as $node) {
                     // 对应的标签名
                     $name  = $tags[1][$node['name']];
                     $alias = $lib . $name != $node['name'] ? ($lib ? strstr($node['name'], $lib) : $node['name']) : '';
@@ -232,7 +230,7 @@ class TagLib
             }
             if (!isset($this->tags[$name])) {
                 // 检测是否存在别名定义
-                foreach ($this->tags as $key => $val) {
+                foreach ($this->tags as $val) {
                     if (isset($val['alias'])) {
                         $array = (array) $val['alias'];
                         if (in_array($name, explode(',', $array[0]))) {

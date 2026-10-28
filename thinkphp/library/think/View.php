@@ -60,9 +60,7 @@ class View
      */
     public static function instance($engine = [], $replace = [])
     {
-        if (is_null(self::$instance)) {
-            self::$instance = new self($engine, $replace);
-        }
+        self::$instance ??= new self($engine, $replace);
         return self::$instance;
     }
 
@@ -114,7 +112,7 @@ class View
             $type = !empty($options['type']) ? $options['type'] : 'Think';
         }
 
-        $class = false !== strpos($type, '\\') ? $type : '\\think\\view\\driver\\' . ucfirst($type);
+        $class = str_contains($type, '\\') ? $type : '\\think\\view\\driver\\' . ucfirst($type);
         if (isset($options['type'])) {
             unset($options['type']);
         }

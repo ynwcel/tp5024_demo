@@ -103,7 +103,7 @@ if (!function_exists('config')) {
     function config($name = '', $value = null, $range = '')
     {
         if (is_null($value) && is_string($name)) {
-            return 0 === strpos($name, '?') ? Config::has(substr($name, 1), $range) : Config::get($name, $range);
+            return str_starts_with($name, '?') ? Config::has(substr($name, 1), $range) : Config::get($name, $range);
         } else {
             return Config::set($name, $value, $range);
         }
@@ -120,13 +120,13 @@ if (!function_exists('input')) {
      */
     function input($key = '', $default = null, $filter = '')
     {
-        if (0 === strpos($key, '?')) {
+        if (str_starts_with($key, '?')) {
             $key = substr($key, 1);
             $has = true;
         }
         if ($pos = strpos($key, '.')) {
             // 指定参数来源
-            list($method, $key) = explode('.', $key, 2);
+            [$method, $key] = explode('.', $key, 2);
             if (!in_array($method, ['get', 'post', 'put', 'patch', 'delete', 'route', 'param', 'request', 'session', 'cookie', 'server', 'env', 'path', 'file'])) {
                 $key    = $method . '.' . $key;
                 $method = 'param';
@@ -138,7 +138,7 @@ if (!function_exists('input')) {
         if (isset($has)) {
             return request()->has($key, $method, $default);
         } else {
-            return request()->$method($key, $default, $filter);
+            return request()->$method($key);
         }
     }
 }
@@ -301,7 +301,7 @@ if (!function_exists('session')) {
             Session::clear('' === $value ? null : $value);
         } elseif ('' === $value) {
             // 判断或获取
-            return 0 === strpos($name, '?') ? Session::has(substr($name, 1), $prefix) : Session::get($name, $prefix);
+            return str_starts_with($name, '?') ? Session::has(substr($name, 1), $prefix) : Session::get($name, $prefix);
         } elseif (is_null($value)) {
             // 删除
             return Session::delete($name, $prefix);
@@ -330,7 +330,7 @@ if (!function_exists('cookie')) {
             Cookie::clear($value);
         } elseif ('' === $value) {
             // 获取
-            return 0 === strpos($name, '?') ? Cookie::has(substr($name, 1), $option) : Cookie::get($name, $option);
+            return str_starts_with($name, '?') ? Cookie::has(substr($name, 1), $option) : Cookie::get($name, $option);
         } elseif (is_null($value)) {
             // 删除
             return Cookie::delete($name);
@@ -366,17 +366,17 @@ if (!function_exists('cache')) {
             return $cache->clear($value);
         } elseif ('' === $value) {
             // 获取缓存
-            return 0 === strpos($name, '?') ? $cache->has(substr($name, 1)) : $cache->get($name);
+            return str_starts_with($name, '?') ? $cache->has(substr($name, 1)) : $cache->get($name);
         } elseif (is_null($value)) {
             // 删除缓存
             return $cache->rm($name);
-        } elseif (0 === strpos($name, '?') && '' !== $value) {
+        } elseif (str_starts_with($name, '?') && '' !== $value) {
             $expire = is_numeric($options) ? $options : null;
             return $cache->remember(substr($name, 1), $value, $expire);
         } else {
             // 缓存数据
             if (is_array($options)) {
-                $expire = isset($options['expire']) ? $options['expire'] : null; //修复查询缓存无法设置过期时间
+                $expire = $options['expire'] ?? null; //修复查询缓存无法设置过期时间
             } else {
                 $expire = is_numeric($options) ? $options : null; //默认快捷缓存设置过期时间
             }
@@ -503,7 +503,7 @@ if (!function_exists('redirect')) {
      */
     function redirect($url = [], $params = [], $code = 302, $with = [])
     {
-        if (is_integer($params)) {
+        if (is_int($params)) {
             $code   = $params;
             $params = [];
         }

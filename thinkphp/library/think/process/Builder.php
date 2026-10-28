@@ -15,7 +15,6 @@ use think\Process;
 
 class Builder
 {
-    private $arguments;
     private $cwd;
     private $env = null;
     private $input;
@@ -29,9 +28,8 @@ class Builder
      * 构造方法
      * @param string[] $arguments 参数
      */
-    public function __construct(array $arguments = [])
+    public function __construct(private array $arguments = [])
     {
-        $this->arguments = $arguments;
     }
 
     /**
@@ -136,7 +134,7 @@ class Builder
      */
     public function setInput($input)
     {
-        $this->input = Utils::validateInput(sprintf('%s::%s', __CLASS__, __FUNCTION__), $input);
+        $this->input = Utils::validateInput(sprintf('%s::%s', self::class, __FUNCTION__), $input);
 
         return $this;
     }

@@ -105,9 +105,7 @@ class Sqlite extends Driver
     {
         $name  = $this->getCacheKey($name);
         $value = sqlite_escape_string(serialize($value));
-        if (is_null($expire)) {
-            $expire = $this->options['expire'];
-        }
+        $expire ??= $this->options['expire'];
         if ($expire instanceof \DateTime) {
             $expire = $expire->getTimestamp();
         } else {

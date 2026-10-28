@@ -15,7 +15,7 @@ use think\console\input\Argument;
 use think\console\input\Definition;
 use think\console\input\Option;
 
-class Input
+class Input implements \Stringable
 {
 
     /**
@@ -81,7 +81,7 @@ class Input
                 $this->parseArgument($token);
             } elseif ($parseOptions && '--' == $token) {
                 $parseOptions = false;
-            } elseif ($parseOptions && 0 === strpos($token, '--')) {
+            } elseif ($parseOptions && str_starts_with($token, '--')) {
                 $this->parseLongOption($token);
             } elseif ($parseOptions && '-' === $token[0] && '-' !== $token) {
                 $this->parseShortOption($token);
@@ -266,7 +266,7 @@ class Input
 
         foreach ($this->tokens as $token) {
             foreach ($values as $value) {
-                if ($token === $value || 0 === strpos($token, $value . '=')) {
+                if ($token === $value || str_starts_with($token, $value . '=')) {
                     return true;
                 }
             }
@@ -290,7 +290,7 @@ class Input
             $token = array_shift($tokens);
 
             foreach ($values as $value) {
-                if ($token === $value || 0 === strpos($token, $value . '=')) {
+                if ($token === $value || str_starts_with($token, $value . '=')) {
                     if (false !== $pos = strpos($token, '=')) {
                         return substr($token, $pos + 1);
                     }
@@ -353,7 +353,7 @@ class Input
             throw new \InvalidArgumentException(sprintf('The "%s" argument does not exist.', $name));
         }
 
-        return isset($this->arguments[$name]) ? $this->arguments[$name] : $this->definition->getArgument($name)
+        return $this->arguments[$name] ?? $this->definition->getArgument($name)
             ->getDefault();
     }
 
@@ -403,7 +403,7 @@ class Input
             throw new \InvalidArgumentException(sprintf('The "%s" option does not exist.', $name));
         }
 
-        return isset($this->options[$name]) ? $this->options[$name] : $this->definition->getOption($name)->getDefault();
+        return $this->options[$name] ?? $this->definition->getOption($name)->getDefault();
     }
 
     /**
@@ -445,7 +445,7 @@ class Input
      * 返回传递给命令的参数的字符串
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         $tokens = array_map(function ($token) {
             if (preg_match('{^(-[^=]+=)(.+)}', $token, $match)) {

@@ -21,16 +21,6 @@ use think\console\output\driver\Buffer;
 class Console
 {
     /**
-     * @var string 命令名称
-     */
-    private $name;
-
-    /**
-     * @var string 命令版本
-     */
-    private $version;
-
-    /**
      * @var Command[] 命令
      */
     private $commands = [];
@@ -83,11 +73,8 @@ class Console
      * @param  string     $version 版本
      * @param null|string $user    执行用户
      */
-    public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN', $user = null)
+    public function __construct(private $name = 'UNKNOWN', private $version = 'UNKNOWN', $user = null)
     {
-        $this->name    = $name;
-        $this->version = $version;
-
         if ($user) {
             $this->setUser($user);
         }
@@ -406,7 +393,7 @@ class Console
 
         if (null === $command->getDefinition()) {
             throw new \LogicException(
-                sprintf('Command class "%s" is not correctly initialized. You probably forgot to call the parent constructor.', get_class($command))
+                sprintf('Command class "%s" is not correctly initialized. You probably forgot to call the parent constructor.', $command::class)
             );
         }
 
@@ -493,9 +480,7 @@ class Console
      */
     public function findNamespace($namespace)
     {
-        $expr = preg_replace_callback('{([^:]+|)}', function ($matches) {
-            return preg_quote($matches[1]) . '[^:]*';
-        }, $namespace);
+        $expr = preg_replace_callback('{([^:]+|)}', fn($matches) => preg_quote($matches[1]) . '[^:]*', $namespace);
 
         $allNamespaces = $this->getNamespaces();
         $namespaces    = preg_grep('{^' . $expr . '}', $allNamespaces);
@@ -541,9 +526,7 @@ class Console
      */
     public function find($name)
     {
-        $expr = preg_replace_callback('{([^:]+|)}', function ($matches) {
-            return preg_quote($matches[1]) . '[^:]*';
-        }, $name);
+        $expr = preg_replace_callback('{([^:]+|)}', fn($matches) => preg_quote($matches[1]) . '[^:]*', $name);
 
         $allCommands = array_keys($this->commands);
         $commands    = preg_grep('{^' . $expr . '}', $allCommands);
@@ -796,7 +779,7 @@ class Console
 
                 if ($lev <= strlen($subname) / 3 ||
                     '' !== $subname &&
-                    false !== strpos($parts[$i], $subname)
+                    str_contains($parts[$i], $subname)
                 ) {
                     $alternatives[$collectionName] = $exists ?
                         $alternatives[$collectionName] + $lev :
@@ -810,16 +793,14 @@ class Console
         foreach ($collection as $item) {
             $lev = levenshtein($name, $item);
 
-            if ($lev <= strlen($name) / 3 || false !== strpos($item, $name)) {
+            if ($lev <= strlen($name) / 3 || str_contains($item, $name)) {
                 $alternatives[$item] = isset($alternatives[$item]) ?
                     $alternatives[$item] - $lev :
                     $lev;
             }
         }
 
-        $alternatives = array_filter($alternatives, function ($lev) use ($threshold) {
-            return $lev < 2 * $threshold;
-        });
+        $alternatives = array_filter($alternatives, fn($lev) => $lev < 2 * $threshold);
 
         asort($alternatives);
 

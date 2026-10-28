@@ -51,7 +51,7 @@ class Cache
         }
 
         if (true === $name || !isset(self::$instance[$name])) {
-            $class = false === strpos($type, '\\') ?
+            $class = !str_contains($type, '\\') ?
             '\\think\\cache\\driver\\' . ucwords($type) :
             $type;
 

@@ -56,7 +56,7 @@ class Memcached extends Driver
         // 建立连接
         $servers = [];
         foreach ((array) $hosts as $i => $host) {
-            $servers[] = [$host, (isset($ports[$i]) ? $ports[$i] : $ports[0]), 1];
+            $servers[] = [$host, ($ports[$i] ?? $ports[0]), 1];
         }
         $this->handler->addServers($servers);
         if ('' != $this->options['username']) {
@@ -100,9 +100,7 @@ class Memcached extends Driver
      */
     public function set($name, $value, $expire = null)
     {
-        if (is_null($expire)) {
-            $expire = $this->options['expire'];
-        }
+        $expire ??= $this->options['expire'];
         if ($expire instanceof \DateTime) {
             $expire = $expire->getTimestamp() - time();
         }

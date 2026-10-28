@@ -112,25 +112,25 @@ class Think
         // 获取视图根目录
         if (strpos($template, '@')) {
             // 跨模块调用
-            list($module, $template) = explode('@', $template);
+            [$module, $template] = explode('@', $template);
         }
         if ($this->config['view_base']) {
             // 基础视图目录
-            $module = isset($module) ? $module : $request->module();
+            $module ??= $request->module();
             $path   = $this->config['view_base'] . ($module ? $module . DS : '');
         } else {
             $path = isset($module) ? APP_PATH . $module . DS . 'view' . DS : $this->config['view_path'];
         }
 
         $depr = $this->config['view_depr'];
-        if (0 !== strpos($template, '/')) {
+        if (!str_starts_with($template, '/')) {
             $template   = str_replace(['/', ':'], $depr, $template);
             $controller = Loader::parseName($request->controller());
             if ($controller) {
                 if ('' == $template) {
                     // 如果模板文件名为空 按照默认规则定位
                     $template = str_replace('.', DS, $controller) . $depr . (1 == $this->config['auto_rule'] ? Loader::parseName($request->action(true)) : $request->action());
-                } elseif (false === strpos($template, $depr)) {
+                } elseif (!str_contains($template, $depr)) {
                     $template = str_replace('.', DS, $controller) . $depr . $template;
                 }
             }

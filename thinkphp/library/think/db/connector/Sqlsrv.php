@@ -49,9 +49,9 @@ class Sqlsrv extends Connection
      */
     public function getFields($tableName)
     {
-        list($tableName) = explode(' ', $tableName);
+        [$tableName] = explode(' ', $tableName);
         $tableNames      = explode('.', $tableName);
-        $tableName       = isset($tableNames[1]) ? $tableNames[1] : $tableNames[0];
+        $tableName       = $tableNames[1] ?? $tableNames[0];
 
         $sql = "SELECT   column_name,   data_type,   column_default,   is_nullable
         FROM    information_schema.tables AS t
@@ -65,7 +65,7 @@ class Sqlsrv extends Connection
         $result = $pdo->fetchAll(PDO::FETCH_ASSOC);
         $info   = [];
         if ($result) {
-            foreach ($result as $key => $val) {
+            foreach ($result as $val) {
                 $val                       = array_change_key_case($val);
                 $info[$val['column_name']] = [
                     'name'    => $val['column_name'],

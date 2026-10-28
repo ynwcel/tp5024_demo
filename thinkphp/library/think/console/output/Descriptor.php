@@ -34,25 +34,14 @@ class Descriptor
     {
         $this->output = $output;
 
-        switch (true) {
-            case $object instanceof InputArgument:
-                $this->describeInputArgument($object, $options);
-                break;
-            case $object instanceof InputOption:
-                $this->describeInputOption($object, $options);
-                break;
-            case $object instanceof InputDefinition:
-                $this->describeInputDefinition($object, $options);
-                break;
-            case $object instanceof Command:
-                $this->describeCommand($object, $options);
-                break;
-            case $object instanceof Console:
-                $this->describeConsole($object, $options);
-                break;
-            default:
-                throw new \InvalidArgumentException(sprintf('Object of type "%s" is not describable.', get_class($object)));
-        }
+        match (true) {
+            $object instanceof InputArgument => $this->describeInputArgument($object, $options),
+            $object instanceof InputOption => $this->describeInputOption($object, $options),
+            $object instanceof InputDefinition => $this->describeInputDefinition($object, $options),
+            $object instanceof Command => $this->describeCommand($object, $options),
+            $object instanceof Console => $this->describeConsole($object, $options),
+            default => throw new \InvalidArgumentException(sprintf('Object of type "%s" is not describable.', $object::class)),
+        };
     }
 
     /**
@@ -82,7 +71,7 @@ class Descriptor
             $default = '';
         }
 
-        $totalWidth   = isset($options['total_width']) ? $options['total_width'] : strlen($argument->getName());
+        $totalWidth   = $options['total_width'] ?? strlen($argument->getName());
         $spacingWidth = $totalWidth - strlen($argument->getName()) + 2;
 
         $this->writeText(sprintf("  <info>%s</info>%s%s%s", $argument->getName(), str_repeat(' ', $spacingWidth), // + 17 = 2 spaces + <info> + </info> + 2 spaces
@@ -115,7 +104,7 @@ class Descriptor
             }
         }
 
-        $totalWidth = isset($options['total_width']) ? $options['total_width'] : $this->calculateTotalWidthForOptions([$option]);
+        $totalWidth = $options['total_width'] ?? $this->calculateTotalWidthForOptions([$option]);
         $synopsis   = sprintf('%s%s', $option->getShortcut() ? sprintf('-%s, ', $option->getShortcut()) : '    ', sprintf('--%s%s', $option->getName(), $value));
 
         $spacingWidth = $totalWidth - strlen($synopsis) + 2;
@@ -155,7 +144,7 @@ class Descriptor
 
             $this->writeText('<comment>Options:</comment>', $options);
             foreach ($definition->getOptions() as $option) {
-                if (strlen($option->getShortcut()) > 1) {
+                if (strlen((string) $option->getShortcut()) > 1) {
                     $laterOptions[] = $option;
                     continue;
                 }
@@ -212,14 +201,14 @@ class Descriptor
      */
     protected function describeConsole(Console $console, array $options = [])
     {
-        $describedNamespace = isset($options['namespace']) ? $options['namespace'] : null;
+        $describedNamespace = $options['namespace'] ?? null;
         $description        = new ConsoleDescription($console, $describedNamespace);
 
         if (isset($options['raw_text']) && $options['raw_text']) {
             $width = $this->getColumnWidth($description->getCommands());
 
             foreach ($description->getCommands() as $command) {
-                $this->writeText(sprintf("%-${width}s %s", $command->getName(), $command->getDescription()), $options);
+                $this->writeText(sprintf("%-{$width}s %s", $command->getName(), $command->getDescription()), $options);
                 $this->writeText("\n");
             }
         } else {

@@ -14,13 +14,11 @@ namespace think\console\output;
 class Question
 {
 
-    private $question;
     private $attempts;
     private $hidden         = false;
     private $hiddenFallback = true;
     private $autocompleterValues;
     private $validator;
-    private $default;
     private $normalizer;
 
     /**
@@ -28,10 +26,8 @@ class Question
      * @param string $question 问题
      * @param mixed  $default  默认答案
      */
-    public function __construct($question, $default = null)
+    public function __construct(private $question, private $default = null)
     {
-        $this->question = $question;
-        $this->default  = $default;
     }
 
     /**

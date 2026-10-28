@@ -11,24 +11,21 @@
 
 namespace think\db;
 
-class Expression
+class Expression implements \Stringable
 {
-    /**
-     * 查询表达式
-     *
-     * @var string
-     */
-    protected $value;
-
     /**
      * 创建一个查询表达式
      *
      * @param  string  $value
      * @return void
      */
-    public function __construct($value)
+    public function __construct(
+        /**
+         * 查询表达式
+         */
+        protected $value
+    )
     {
-        $this->value = $value;
     }
 
     /**
@@ -41,7 +38,7 @@ class Expression
         return $this->value;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return (string) $this->value;
     }

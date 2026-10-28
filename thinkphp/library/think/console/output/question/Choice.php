@@ -16,7 +16,6 @@ use think\console\output\Question;
 class Choice extends Question
 {
 
-    private $choices;
     private $multiselect  = false;
     private $prompt       = ' > ';
     private $errorMessage = 'Value "%s" is invalid';
@@ -27,13 +26,11 @@ class Choice extends Question
      * @param array  $choices  选项
      * @param mixed  $default  默认答案
      */
-    public function __construct($question, array $choices, $default = null)
+    public function __construct($question, private array $choices, $default = null)
     {
         parent::__construct($question, $default);
-
-        $this->choices = $choices;
         $this->setValidator($this->getDefaultValidator());
-        $this->setAutocompleterValues($choices);
+        $this->setAutocompleterValues($this->choices);
     }
 
     /**

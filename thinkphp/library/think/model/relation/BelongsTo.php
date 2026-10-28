@@ -87,12 +87,12 @@ class BelongsTo extends OneToOne
     public function hasWhere($where = [], $fields = null)
     {
         $table    = $this->query->getTable();
-        $model    = basename(str_replace('\\', '/', get_class($this->parent)));
+        $model    = basename(str_replace('\\', '/', $this->parent::class));
         $relation = basename(str_replace('\\', '/', $this->model));
 
         if (is_array($where)) {
             foreach ($where as $key => $val) {
-                if (false === strpos($key, '.')) {
+                if (!str_contains($key, '.')) {
                     $where[$relation . '.' . $key] = $val;
                     unset($where[$key]);
                 }

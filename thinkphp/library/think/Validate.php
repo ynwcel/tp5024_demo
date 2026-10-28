@@ -127,9 +127,7 @@ class Validate
      */
     public static function make($rules = [], $message = [], $field = [])
     {
-        if (is_null(self::$instance)) {
-            self::$instance = new self($rules, $message, $field);
-        }
+        self::$instance ??= new self($rules, $message, $field);
         return self::$instance;
     }
 
@@ -293,9 +291,9 @@ class Validate
             }
             if (strpos($key, '|')) {
                 // 字段|描述 用于指定属性名称
-                list($key, $title) = explode('|', $key);
+                [$key, $title] = explode('|', $key);
             } else {
-                $title = isset($this->field[$key]) ? $this->field[$key] : $key;
+                $title = $this->field[$key] ?? $key;
             }
 
             // 场景检测
@@ -361,9 +359,9 @@ class Validate
                 $result = call_user_func_array($rule, [$value]);
             } else {
                 // 判断验证类型
-                list($type, $rule) = $this->getValidateType($key, $rule);
+                [$type, $rule] = $this->getValidateType($key, $rule);
 
-                $callback = isset(self::$type[$type]) ? self::$type[$type] : [$this, $type];
+                $callback = self::$type[$type] ?? [$this, $type];
 
                 $result = call_user_func_array($callback, [$value, $rule]);
             }
@@ -400,12 +398,12 @@ class Validate
                 $info   = is_numeric($key) ? '' : $key;
             } else {
                 // 判断验证类型
-                list($type, $rule, $info) = $this->getValidateType($key, $rule);
+                [$type, $rule, $info] = $this->getValidateType($key, $rule);
 
                 // 如果不是require 有数据才会行验证
-                if (0 === strpos($info, 'require') || (!is_null($value) && '' !== $value)) {
+                if (str_starts_with($info, 'require') || (!is_null($value) && '' !== $value)) {
                     // 验证类型
-                    $callback = isset(self::$type[$type]) ? self::$type[$type] : [$this, $type];
+                    $callback = self::$type[$type] ?? [$this, $type];
                     // 验证数据
                     $result = call_user_func_array($callback, [$value, $rule, $data, $field, $title]);
                 } else {
@@ -417,7 +415,7 @@ class Validate
                 // 验证失败 返回错误信息
                 if (isset($msg[$i])) {
                     $message = $msg[$i];
-                    if (is_string($message) && strpos($message, '{%') === 0) {
+                    if (is_string($message) && str_starts_with($message, '{%')) {
                         $message = Lang::get(substr($message, 2, -1));
                     }
                 } else {
@@ -426,7 +424,7 @@ class Validate
                 return $message;
             } elseif (true !== $result) {
                 // 返回自定义错误信息
-                if (is_string($result) && false !== strpos($result, ':')) {
+                if (is_string($result) && str_contains($result, ':')) {
                     $result = str_replace([':attribute', ':rule'], [$title, (string) $rule], $result);
                 }
                 return $result;
@@ -451,7 +449,7 @@ class Validate
         }
 
         if (strpos($rule, ':')) {
-            list($type, $rule) = explode(':', $rule, 2);
+            [$type, $rule] = explode(':', $rule, 2);
             if (isset($this->alias[$type])) {
                 // 判断别名
                 $type = $this->alias[$type];
@@ -687,7 +685,7 @@ class Validate
             try {
                 $info = getimagesize($image);
                 return $info ? $info[2] : false;
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 return false;
             }
         }
@@ -806,7 +804,7 @@ class Validate
         }
         if ($rule) {
             $rule                        = explode(',', $rule);
-            list($width, $height, $type) = getimagesize($file->getRealPath());
+            [$width, $height, $type] = getimagesize($file->getRealPath());
             if (isset($rule[2])) {
                 $imageType = strtolower($rule[2]);
                 if ('jpeg' == $imageType) {
@@ -817,7 +815,7 @@ class Validate
                 }
             }
 
-            list($w, $h) = $rule;
+            [$w, $h] = $rule;
             return $w == $width && $h == $height;
         } else {
             return in_array($this->getImageType($file->getRealPath()), [1, 2, 3, 6]);
@@ -864,17 +862,17 @@ class Validate
         if (is_string($rule)) {
             $rule = explode(',', $rule);
         }
-        if (false !== strpos($rule[0], '\\')) {
+        if (str_contains($rule[0], '\\')) {
             // 指定模型类
             $db = new $rule[0];
         } else {
             try {
                 $db = Loader::model($rule[0]);
-            } catch (ClassNotFoundException $e) {
+            } catch (ClassNotFoundException) {
                 $db = Db::name($rule[0]);
             }
         }
-        $key = isset($rule[1]) ? $rule[1] : $field;
+        $key = $rule[1] ?? $field;
 
         if (strpos($key, '^')) {
             // 支持多个字段验证
@@ -892,7 +890,7 @@ class Validate
             $map = [];
         }
 
-        $pk = isset($rule[3]) ? $rule[3] : $db->getPk();
+        $pk = $rule[3] ?? $db->getPk();
         if (is_string($pk)) {
             if (isset($rule[2])) {
                 $map[$pk] = ['neq', $rule[2]];
@@ -929,9 +927,9 @@ class Validate
     protected function filter($value, $rule)
     {
         if (is_string($rule) && strpos($rule, ',')) {
-            list($rule, $param) = explode(',', $rule);
+            [$rule, $param] = explode(',', $rule);
         } elseif (is_array($rule)) {
-            $param = isset($rule[1]) ? $rule[1] : null;
+            $param = $rule[1] ?? null;
             $rule  = $rule[0];
         } else {
             $param = null;
@@ -949,7 +947,7 @@ class Validate
      */
     protected function requireIf($value, $rule, $data)
     {
-        list($field, $val) = explode(',', $rule);
+        [$field, $val] = explode(',', $rule);
         if ($this->getDataValue($data, $field) == $val) {
             return !empty($value) || '0' == $value;
         } else {
@@ -1029,7 +1027,7 @@ class Validate
         if (is_string($rule)) {
             $rule = explode(',', $rule);
         }
-        list($min, $max) = $rule;
+        [$min, $max] = $rule;
         return $value >= $min && $value <= $max;
     }
 
@@ -1045,7 +1043,7 @@ class Validate
         if (is_string($rule)) {
             $rule = explode(',', $rule);
         }
-        list($min, $max) = $rule;
+        [$min, $max] = $rule;
         return $value < $min || $value > $max;
     }
 
@@ -1068,7 +1066,7 @@ class Validate
 
         if (strpos($rule, ',')) {
             // 长度区间
-            list($min, $max) = explode(',', $rule);
+            [$min, $max] = explode(',', $rule);
             return $length >= $min && $length <= $max;
         } else {
             // 指定长度
@@ -1180,7 +1178,7 @@ class Validate
         if (is_string($rule)) {
             $rule = explode(',', $rule);
         }
-        list($start, $end) = $rule;
+        [$start, $end] = $rule;
         if (!is_numeric($start)) {
             $start = strtotime($start);
         }
@@ -1227,7 +1225,7 @@ class Validate
         if (isset($this->regex[$rule])) {
             $rule = $this->regex[$rule];
         }
-        if (0 !== strpos($rule, '/') && !preg_match('/\/[imsU]{0,4}$/', $rule)) {
+        if (!str_starts_with($rule, '/') && !preg_match('/\/[imsU]{0,4}$/', $rule)) {
             // 不是正则表达式则两端补上/
             $rule = '/^' . $rule . '$/';
         }
@@ -1280,10 +1278,10 @@ class Validate
             $value = $key;
         } elseif (strpos($key, '.')) {
             // 支持二维数组验证
-            list($name1, $name2) = explode('.', $key);
-            $value               = isset($data[$name1][$name2]) ? $data[$name1][$name2] : null;
+            [$name1, $name2] = explode('.', $key);
+            $value               = $data[$name1][$name2] ?? null;
         } else {
-            $value = isset($data[$key]) ? $data[$key] : null;
+            $value = $data[$key] ?? null;
         }
         return $value;
     }
@@ -1307,19 +1305,19 @@ class Validate
             $msg = $this->message[$attribute];
         } elseif (isset(self::$typeMsg[$type])) {
             $msg = self::$typeMsg[$type];
-        } elseif (0 === strpos($type, 'require')) {
+        } elseif (str_starts_with($type, 'require')) {
             $msg = self::$typeMsg['require'];
         } else {
             $msg = $title . Lang::get('not conform to the rules');
         }
 
-        if (is_string($msg) && 0 === strpos($msg, '{%')) {
+        if (is_string($msg) && str_starts_with($msg, '{%')) {
             $msg = Lang::get(substr($msg, 2, -1));
         } elseif (Lang::has($msg)) {
             $msg = Lang::get($msg);
         }
 
-        if (is_string($msg) && is_scalar($rule) && false !== strpos($msg, ':')) {
+        if (is_string($msg) && is_scalar($rule) && str_contains($msg, ':')) {
             // 变量替换
             if (is_string($rule) && strpos($rule, ',')) {
                 $array = array_pad(explode(',', $rule), 3, '');
@@ -1365,7 +1363,7 @@ class Validate
         if (method_exists($class, $method)) {
             return call_user_func_array([$class, $method], $params);
         } else {
-            throw new \BadMethodCallException('method not exists:' . __CLASS__ . '->' . $method);
+            throw new \BadMethodCallException('method not exists:' . self::class . '->' . $method);
         }
     }
 }

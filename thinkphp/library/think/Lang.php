@@ -75,9 +75,7 @@ class Lang
     {
         $range = $range ?: self::$range;
 
-        if (!isset(self::$lang[$range])) {
-            self::$lang[$range] = [];
-        }
+        self::$lang[$range] ??= [];
 
         if (is_array($name)) {
             return self::$lang[$range] = array_change_key_case($name) + self::$lang[$range];
@@ -98,9 +96,7 @@ class Lang
         $range = $range ?: self::$range;
         $file  = is_string($file) ? [$file] : $file;
 
-        if (!isset(self::$lang[$range])) {
-            self::$lang[$range] = [];
-        }
+        self::$lang[$range] ??= [];
 
         $lang = [];
 
@@ -156,7 +152,7 @@ class Lang
         }
 
         $key   = strtolower($name);
-        $value = isset(self::$lang[$range][$key]) ? self::$lang[$range][$key] : $name;
+        $value = self::$lang[$range][$key] ?? $name;
 
         // 变量解析
         if (!empty($vars) && is_array($vars)) {

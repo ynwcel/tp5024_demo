@@ -35,10 +35,7 @@ class Process
     const TIMEOUT_PRECISION = 0.2;
 
     private $callback;
-    private $commandline;
-    private $cwd;
     private $env;
-    private $input;
     private $starttime;
     private $lastOutputTime;
     private $timeout;
@@ -123,14 +120,11 @@ class Process
      * @throws \RuntimeException
      * @api
      */
-    public function __construct($commandline, $cwd = null, array $env = null, $input = null, $timeout = 60, array $options = [])
+    public function __construct(private $commandline, private $cwd = null, array $env = null, private $input = null, $timeout = 60, array $options = [])
     {
         if (!function_exists('proc_open')) {
             throw new \RuntimeException('The Process class relies on proc_open, which is not available on your PHP installation.');
         }
-
-        $this->commandline = $commandline;
-        $this->cwd         = $cwd;
 
         if (null === $this->cwd && (defined('ZEND_THREAD_SAFE') || '\\' === DS)) {
             $this->cwd = getcwd();
@@ -138,8 +132,6 @@ class Process
         if (null !== $env) {
             $this->setEnv($env);
         }
-
-        $this->input = $input;
         $this->setTimeout($timeout);
         $this->useFileHandles               = '\\' === DS;
         $this->pty                          = false;
@@ -223,9 +215,7 @@ class Process
             }
             $commandline .= '"';
 
-            if (!isset($this->options['bypass_shell'])) {
-                $this->options['bypass_shell'] = true;
-            }
+            $this->options['bypass_shell'] ??= true;
         }
 
         $this->process = proc_open($commandline, $descriptors, $this->processPipes->pipes, $this->cwd, $this->env, $this->options);
@@ -493,7 +483,7 @@ class Process
             return;
         }
 
-        return isset(self::$exitCodes[$exitcode]) ? self::$exitCodes[$exitcode] : 'Unknown error';
+        return self::$exitCodes[$exitcode] ?? 'Unknown error';
     }
 
     /**
@@ -817,9 +807,7 @@ class Process
      */
     public function setEnv(array $env)
 {
-        $env = array_filter($env, function ($value) {
-            return !is_array($value);
-        });
+        $env = array_filter($env, fn($value) => !is_array($value));
 
         $this->env = [];
         foreach ($env as $key => $value) {
@@ -849,7 +837,7 @@ class Process
             throw new \LogicException('Input can not be set while the process is running.');
         }
 
-        $this->input = Utils::validateInput(sprintf('%s::%s', __CLASS__, __FUNCTION__), $input);
+        $this->input = Utils::validateInput(sprintf('%s::%s', self::class, __FUNCTION__), $input);
 
         return $this;
     }
@@ -996,7 +984,7 @@ class Process
     protected function buildCallback($callback)
 {
         $out      = self::OUT;
-        $callback = function ($type, $data) use ($callback, $out) {
+        $callback = function ($type, $data) use ($callback, $out): void {
             if ($out == $type) {
                 $this->addOutput($data);
             } else {
@@ -1048,7 +1036,7 @@ class Process
         ob_start();
         phpinfo(INFO_GENERAL);
 
-        return self::$sigchild = false !== strpos(ob_get_clean(), '--enable-sigchild');
+        return self::$sigchild = str_contains(ob_get_clean(), '--enable-sigchild');
     }
 
     /**
@@ -1111,7 +1099,7 @@ class Process
             $exitcode = -1;
         }
 
-        $this->exitcode = -1 !== $exitcode ? $exitcode : (null !== $this->exitcode ? $this->exitcode : -1);
+        $this->exitcode = -1 !== $exitcode ? $exitcode : ($this->exitcode ?? -1);
         $this->status   = self::STATUS_TERMINATED;
 
         if (-1 === $this->exitcode && null !== $this->fallbackExitcode) {

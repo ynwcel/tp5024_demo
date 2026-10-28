@@ -109,7 +109,7 @@ class Loader
 
         if (isset(self::$prefixLengthsPsr4[$first])) {
             foreach (self::$prefixLengthsPsr4[$first] as $prefix => $length) {
-                if (0 === strpos($class, $prefix)) {
+                if (str_starts_with($class, $prefix)) {
                     foreach (self::$prefixDirsPsr4[$prefix] as $dir) {
                         if (is_file($file = $dir . DS . substr($logicalPathPsr4, $length))) {
                             return $file;
@@ -138,7 +138,7 @@ class Loader
 
         if (isset(self::$prefixesPsr0[$first])) {
             foreach (self::$prefixesPsr0[$first] as $prefix => $dirs) {
-                if (0 === strpos($class, $prefix)) {
+                if (str_starts_with($class, $prefix)) {
                     foreach ($dirs as $dir) {
                         if (is_file($file = $dir . DS . $logicalPathPsr0)) {
                             return $file;
@@ -384,7 +384,7 @@ class Loader
         }
 
         if (empty($baseUrl)) {
-            list($name, $class) = explode(DS, $class, 2);
+            [$name, $class] = explode(DS, $class, 2);
 
             if (isset(self::$prefixDirsPsr4[$name . '\\'])) {
                 // 注册的命名空间
@@ -444,7 +444,7 @@ class Loader
             return self::$instance[$uid];
         }
 
-        list($module, $class) = self::getModuleAndClass($name, $layer, $appendSuffix);
+        [$module, $class] = self::getModuleAndClass($name, $layer, $appendSuffix);
 
         if (class_exists($class)) {
             $model = new $class();
@@ -473,7 +473,7 @@ class Loader
      */
     public static function controller($name, $layer = 'controller', $appendSuffix = false, $empty = '')
     {
-        list($module, $class) = self::getModuleAndClass($name, $layer, $appendSuffix);
+        [$module, $class] = self::getModuleAndClass($name, $layer, $appendSuffix);
 
         if (class_exists($class)) {
             return App::invokeClass($class);
@@ -513,7 +513,7 @@ class Loader
             return self::$instance[$uid];
         }
 
-        list($module, $class) = self::getModuleAndClass($name, $layer, $appendSuffix);
+        [$module, $class] = self::getModuleAndClass($name, $layer, $appendSuffix);
 
         if (class_exists($class)) {
             $validate = new $class;
@@ -540,12 +540,12 @@ class Loader
      */
     protected static function getModuleAndClass($name, $layer, $appendSuffix)
     {
-        if (false !== strpos($name, '\\')) {
+        if (str_contains($name, '\\')) {
             $module = Request::instance()->module();
             $class  = $name;
         } else {
             if (strpos($name, '/')) {
-                list($module, $name) = explode('/', $name, 2);
+                [$module, $name] = explode('/', $name, 2);
             } else {
                 $module = Request::instance()->module();
             }
@@ -612,9 +612,7 @@ class Loader
     {
         $name = $name ?: "";
         if ($type) {
-            $name = preg_replace_callback('/_([a-zA-Z])/', function ($match) {
-                return strtoupper($match[1]);
-            }, $name);
+            $name = preg_replace_callback('/_([a-zA-Z])/', fn($match) => strtoupper($match[1]), $name);
 
             return $ucfirst ? ucfirst($name) : lcfirst($name);
         }

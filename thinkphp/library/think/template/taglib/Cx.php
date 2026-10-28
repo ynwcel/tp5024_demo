@@ -82,9 +82,9 @@ class Cx extends Taglib
     {
         $name   = $tag['name'];
         $id     = $tag['id'];
-        $empty  = isset($tag['empty']) ? $tag['empty'] : '';
+        $empty  = $tag['empty'] ?? '';
         $key    = !empty($tag['key']) ? $tag['key'] : 'i';
-        $mod    = isset($tag['mod']) ? $tag['mod'] : '2';
+        $mod    = $tag['mod'] ?? '2';
         $offset = !empty($tag['offset']) && is_numeric($tag['offset']) ? intval($tag['offset']) : 0;
         $length = !empty($tag['length']) && is_numeric($tag['length']) ? intval($tag['length']) : 'null';
         // 允许使用函数设定数据集 <volist name=":fun('arg')" id="vo">{$vo.name}</volist>
@@ -144,13 +144,13 @@ class Cx extends Taglib
         $name   = $tag['name'];
         $key    = !empty($tag['key']) ? $tag['key'] : 'key';
         $item   = !empty($tag['id']) ? $tag['id'] : $tag['item'];
-        $empty  = isset($tag['empty']) ? $tag['empty'] : '';
+        $empty  = $tag['empty'] ?? '';
         $offset = !empty($tag['offset']) && is_numeric($tag['offset']) ? intval($tag['offset']) : 0;
         $length = !empty($tag['length']) && is_numeric($tag['length']) ? intval($tag['length']) : 'null';
 
         $parseStr = '<?php ';
         // 支持用函数传数组
-        if (':' == substr($name, 0, 1)) {
+        if (str_starts_with($name, ':')) {
             $var  = '$_' . uniqid();
             $name = $this->autoBuildVar($name);
             $parseStr .= $var . '=' . $name . '; ';
@@ -161,9 +161,7 @@ class Cx extends Taglib
         $parseStr .= 'if(is_array(' . $name . ') || ' . $name . ' instanceof \think\Collection || ' . $name . ' instanceof \think\Paginator): ';
         // 设置了输出数组长度
         if (0 != $offset || 'null' != $length) {
-            if (!isset($var)) {
-                $var = '$_' . uniqid();
-            }
+            $var ??= '$_' . uniqid();
             $parseStr .= $var . ' = is_array(' . $name . ') ? array_slice(' . $name . ',' . $offset . ',' . $length . ', true) : ' . $name . '->slice(' . $offset . ',' . $length . ', true); ';
         } else {
             $var = &$name;
@@ -278,7 +276,7 @@ class Cx extends Taglib
      */
     public function tagCase($tag, $content)
     {
-        $value = isset($tag['expression']) ? $tag['expression'] : $tag['value'];
+        $value = $tag['expression'] ?? $tag['value'];
         $flag  = substr($value, 0, 1);
         if ('$' == $flag || ':' == $flag) {
             $value = $this->autoBuildVar($value);
@@ -293,7 +291,7 @@ class Cx extends Taglib
             $value = 'case "' . $value . '":';
         }
         $parseStr = '<?php ' . $value . ' ?>' . $content;
-        $isBreak  = isset($tag['break']) ? $tag['break'] : '';
+        $isBreak  = $tag['break'] ?? '';
         if ('' == $isBreak || $isBreak) {
             $parseStr .= '<?php break; ?>';
         }
@@ -327,7 +325,7 @@ class Cx extends Taglib
     {
         $name  = $tag['name'];
         $value = $tag['value'];
-        $type  = isset($tag['type']) ? $tag['type'] : 'eq'; // 比较类型
+        $type  = $tag['type'] ?? 'eq'; // 比较类型
         $name  = $this->autoBuildVar($name);
         $flag  = substr($value, 0, 1);
         if ('$' == $flag || ':' == $flag) {
@@ -362,7 +360,7 @@ class Cx extends Taglib
     {
         $name  = $tag['name'];
         $value = $tag['value'];
-        $type  = isset($tag['type']) ? $tag['type'] : 'in'; // 比较类型
+        $type  = $tag['type'] ?? 'in'; // 比较类型
 
         $name = $this->autoBuildVar($name);
         $flag = substr($value, 0, 1);
@@ -490,7 +488,7 @@ class Cx extends Taglib
      */
     public function tagLoad($tag, $content)
     {
-        $file     = isset($tag['file']) ? $tag['file'] : $tag['href'];
+        $file     = $tag['file'] ?? $tag['href'];
         $type     = isset($tag['type']) ? strtolower($tag['type']) : '';
         $parseStr = '';
         $endStr   = '';
@@ -585,7 +583,7 @@ class Cx extends Taglib
         $step       = 1;
         $comparison = 'lt';
         $name       = 'i';
-        $rand       = rand(); //添加随机数，防止嵌套变量冲突
+        $rand       = random_int(0, mt_getrandmax()); //添加随机数，防止嵌套变量冲突
         //获取属性
         foreach ($tag as $key => $value) {
             $value = trim($value);
@@ -630,10 +628,10 @@ class Cx extends Taglib
      */
     public function tagUrl($tag, $content)
     {
-        $url    = isset($tag['link']) ? $tag['link'] : '';
-        $vars   = isset($tag['vars']) ? $tag['vars'] : '';
-        $suffix = isset($tag['suffix']) ? $tag['suffix'] : 'true';
-        $domain = isset($tag['domain']) ? $tag['domain'] : 'false';
+        $url    = $tag['link'] ?? '';
+        $vars   = $tag['vars'] ?? '';
+        $suffix = $tag['suffix'] ?? 'true';
+        $domain = $tag['domain'] ?? 'false';
         return '<?php echo url("' . $url . '","' . $vars . '",' . $suffix . ',' . $domain . ');?>';
     }
 

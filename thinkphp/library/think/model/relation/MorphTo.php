@@ -18,13 +18,6 @@ use think\model\Relation;
 
 class MorphTo extends Relation
 {
-    // 多态字段
-    protected $morphKey;
-    protected $morphType;
-    // 多态别名
-    protected $alias;
-    protected $relation;
-
     /**
      * 构造函数
      * @access public
@@ -34,13 +27,9 @@ class MorphTo extends Relation
      * @param array  $alias     多态别名定义
      * @param string $relation  关联名
      */
-    public function __construct(Model $parent, $morphType, $morphKey, $alias = [], $relation = null)
+    public function __construct(Model $parent, protected $morphType, protected $morphKey, protected $alias = [], protected $relation = null)
     {
         $this->parent    = $parent;
-        $this->morphType = $morphType;
-        $this->morphKey  = $morphKey;
-        $this->alias     = $alias;
-        $this->relation  = $relation;
     }
 
     /**
@@ -114,8 +103,8 @@ class MorphTo extends Relation
         if (isset($this->alias[$model])) {
             $model = $this->alias[$model];
         }
-        if (false === strpos($model, '\\')) {
-            $path = explode('\\', get_class($this->parent));
+        if (!str_contains($model, '\\')) {
+            $path = explode('\\', $this->parent::class);
             array_pop($path);
             array_push($path, Loader::parseName($model, 1));
             $model = implode('\\', $path);
@@ -177,7 +166,7 @@ class MorphTo extends Relation
                 $pk    = $obj->getPk();
                 $list  = $obj->all($val, $subRelation);
                 $data  = [];
-                foreach ($list as $k => $vo) {
+                foreach ($list as $vo) {
                     $data[$vo->$pk] = $vo;
                 }
                 foreach ($resultSet as $result) {
@@ -262,7 +251,7 @@ class MorphTo extends Relation
         $pk        = $model->getPk();
 
         $this->parent->setAttr($morphKey, $model->$pk);
-        $this->parent->setAttr($morphType, $type ?: get_class($model));
+        $this->parent->setAttr($morphType, $type ?: $model::class);
         $this->parent->save();
 
         return $this->parent->setRelation($this->relation, $model);

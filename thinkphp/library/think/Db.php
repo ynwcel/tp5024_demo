@@ -86,7 +86,7 @@ class Db
                 throw new \InvalidArgumentException('Undefined db type');
             }
 
-            $class = false !== strpos($options['type'], '\\') ?
+            $class = str_contains($options['type'], '\\') ?
             $options['type'] :
             '\\think\\db\\connector\\' . ucwords($options['type']);
 
@@ -125,7 +125,7 @@ class Db
     {
         if (empty($config)) {
             $config = Config::get('database');
-        } elseif (is_string($config) && false === strpos($config, '/')) {
+        } elseif (is_string($config) && !str_contains($config, '/')) {
             $config = Config::get($config); // 支持读取配置参数
         }
 
@@ -149,12 +149,12 @@ class Db
 
         $dsn = [
             'type'     => $info['scheme'],
-            'username' => isset($info['user']) ? $info['user'] : '',
-            'password' => isset($info['pass']) ? $info['pass'] : '',
-            'hostname' => isset($info['host']) ? $info['host'] : '',
-            'hostport' => isset($info['port']) ? $info['port'] : '',
+            'username' => $info['user'] ?? '',
+            'password' => $info['pass'] ?? '',
+            'hostname' => $info['host'] ?? '',
+            'hostport' => $info['port'] ?? '',
             'database' => !empty($info['path']) ? ltrim($info['path'], '/') : '',
-            'charset'  => isset($info['fragment']) ? $info['fragment'] : 'utf8',
+            'charset'  => $info['fragment'] ?? 'utf8',
         ];
 
         if (isset($info['query'])) {

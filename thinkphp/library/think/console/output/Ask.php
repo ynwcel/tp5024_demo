@@ -50,9 +50,7 @@ class Ask
 
         $that = $this;
 
-        $interviewer = function () use ($that) {
-            return $that->doAsk();
-        };
+        $interviewer = (fn() => $that->doAsk());
 
         return $this->validateAttempts($interviewer);
     }
@@ -169,7 +167,7 @@ class Ask
                 $ofs        = 0;
 
                 foreach ($autocomplete as $value) {
-                    if (0 === strpos($value, $ret) && $i !== strlen($value)) {
+                    if (str_starts_with($value, $ret) && $i !== strlen($value)) {
                         $matches[$numMatches++] = $value;
                     }
                 }
@@ -245,7 +243,7 @@ class Ask
 
             try {
                 return call_user_func($this->question->getValidator(), $interviewer());
-            } catch (\Exception $error) {
+            } catch (\Exception) {
             }
         }
 
@@ -299,7 +297,7 @@ class Ask
             $width = max(array_map('strlen', array_keys($this->question->getChoices())));
 
             foreach ($this->question->getChoices() as $key => $value) {
-                $this->output->writeln(sprintf("  [<comment>%-${width}s</comment>] %s", $key, $value));
+                $this->output->writeln(sprintf("  [<comment>%-{$width}s</comment>] %s", $key, $value));
             }
         }
 

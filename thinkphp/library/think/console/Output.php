@@ -215,7 +215,7 @@ class Output
         if ($this->handle && method_exists($this->handle, $method)) {
             return call_user_func_array([$this->handle, $method], $args);
         } else {
-            throw new Exception('method not exists:' . __CLASS__ . '->' . $method);
+            throw new Exception('method not exists:' . self::class . '->' . $method);
         }
     }
 

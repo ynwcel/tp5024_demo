@@ -32,9 +32,7 @@ class Pivot extends Model
     {
         $this->parent = $parent;
 
-        if (is_null($this->name)) {
-            $this->name = $table;
-        }
+        $this->name ??= $table;
 
         parent::__construct($data);
     }

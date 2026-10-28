@@ -71,13 +71,13 @@ class HasOne extends OneToOne
     public function has()
     {
         $table      = $this->query->getTable();
-        $model      = basename(str_replace('\\', '/', get_class($this->parent)));
+        $model      = basename(str_replace('\\', '/', $this->parent::class));
         $relation   = basename(str_replace('\\', '/', $this->model));
         $localKey   = $this->localKey;
         $foreignKey = $this->foreignKey;
         return $this->parent->db()
             ->alias($model)
-            ->whereExists(function ($query) use ($table, $model, $relation, $localKey, $foreignKey) {
+            ->whereExists(function ($query) use ($table, $model, $relation, $localKey, $foreignKey): void {
                 $query->table([$table => $relation])->field($relation . '.' . $foreignKey)->whereExp($model . '.' . $localKey, '=' . $relation . '.' . $foreignKey);
             });
     }
@@ -92,12 +92,12 @@ class HasOne extends OneToOne
     public function hasWhere($where = [], $fields = null)
     {
         $table    = $this->query->getTable();
-        $model    = basename(str_replace('\\', '/', get_class($this->parent)));
+        $model    = basename(str_replace('\\', '/', $this->parent::class));
         $relation = basename(str_replace('\\', '/', $this->model));
 
         if (is_array($where)) {
             foreach ($where as $key => $val) {
-                if (false === strpos($key, '.')) {
+                if (!str_contains($key, '.')) {
                     $where[$relation . '.' . $key] = $val;
                     unset($where[$key]);
                 }

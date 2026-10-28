@@ -76,7 +76,7 @@ class App
      */
     public static function run(Request $request = null)
     {
-        $request = is_null($request) ? Request::instance() : $request;
+        $request ??= Request::instance();
 
         try {
             $config = self::initCommon();
@@ -340,7 +340,7 @@ class App
 
         self::$debug && Log::record('[ RUN ] ' . $reflect->class . '->' . $reflect->name . '[ ' . $reflect->getFileName() . ' ]', 'info');
 
-        return $reflect->invokeArgs(isset($class) ? $class : null, $args);
+        return $reflect->invokeArgs($class ?? null, $args);
     }
 
     /**
@@ -377,9 +377,7 @@ class App
 
         $args = [];
         if ($reflect->getNumberOfParameters() > 0) {
-            // 判断数组类型 数字数组时按顺序绑定参数
-            reset($vars);
-            $type = key($vars) === 0 ? 1 : 0;
+            $type = array_key_first($vars) === 0 ? 1 : 0;
 
             foreach ($reflect->getParameters() as $param) {
                 $args[] = self::getParamValue($param, $vars, $type);
@@ -399,8 +397,12 @@ class App
      */
     private static function getParamValue($param, &$vars, $type)
     {
-        $name  = $param->getName();
-        $class = $param->getClass();
+        $name      = $param->getName();
+        $class     = null;
+        $paramType = $param->getType();
+        if ($paramType instanceof \ReflectionNamedType && !$paramType->isBuiltin()) {
+            $class = new \ReflectionClass($paramType->getName());
+        }
 
         if ($class) {
             $className = $class->getName();
@@ -453,7 +455,7 @@ class App
                 $data = self::module(
                     $dispatch['module'],
                     $config,
-                    isset($dispatch['convert']) ? $dispatch['convert'] : null
+                    $dispatch['convert'] ?? null
                 );
                 break;
             case 'controller': // 执行控制器操作
@@ -507,7 +509,7 @@ class App
 
             if ($bind) {
                 // 绑定模块
-                list($bindModule) = explode('/', $bind);
+                [$bindModule] = explode('/', $bind);
 
                 if (empty($result[0])) {
                     $module    = $bindModule;
@@ -603,7 +605,7 @@ class App
             $vars = [$actionName];
         } else {
             // 操作不存在
-            throw new HttpException(404, 'method not exists:' . get_class($instance) . '->' . $action . '()');
+            throw new HttpException(404, 'method not exists:' . $instance::class . '->' . $action . '()');
         }
 
         Hook::listen('action_begin', $call);
@@ -626,7 +628,7 @@ class App
         $result = false;
 
         // 路由检测
-        $check = !is_null(self::$routeCheck) ? self::$routeCheck : $config['url_route_on'];
+        $check = self::$routeCheck ?? $config['url_route_on'];
         if ($check) {
             // 开启路由
             if (is_file(RUNTIME_PATH . 'route.php')) {
@@ -646,7 +648,7 @@ class App
 
             // 路由检测（根据路由定义返回不同的URL调度）
             $result = Route::check($request, $path, $depr, $config['url_domain_deploy']);
-            $must   = !is_null(self::$routeMust) ? self::$routeMust : $config['url_route_must'];
+            $must   = self::$routeMust ?? $config['url_route_must'];
 
             if ($must && false === $result) {
                 // 路由无效

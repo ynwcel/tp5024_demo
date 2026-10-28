@@ -23,7 +23,6 @@ class Option
     private $shortcut;
     private $mode;
     private $default;
-    private $description;
 
     /**
      * 构造方法
@@ -34,9 +33,9 @@ class Option
      * @param mixed        $default     默认值 (类型为 self::VALUE_REQUIRED 或者 self::VALUE_NONE 的时候必须为null)
      * @throws \InvalidArgumentException
      */
-    public function __construct($name, $shortcut = null, $mode = null, $description = '', $default = null)
+    public function __construct($name, $shortcut = null, $mode = null, private $description = '', $default = null)
     {
-        if (0 === strpos($name, '--')) {
+        if (str_starts_with($name, '--')) {
             $name = substr($name, 2);
         }
 
@@ -70,7 +69,6 @@ class Option
         $this->name        = $name;
         $this->shortcut    = $shortcut;
         $this->mode        = $mode;
-        $this->description = $description;
 
         if ($this->isArray() && !$this->acceptValue()) {
             throw new \InvalidArgumentException('Impossible to have an option mode VALUE_IS_ARRAY if the option does not accept a value.');

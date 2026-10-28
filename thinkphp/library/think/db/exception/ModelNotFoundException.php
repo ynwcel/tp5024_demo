@@ -15,17 +15,14 @@ use think\exception\DbException;
 
 class ModelNotFoundException extends DbException
 {
-    protected $model;
-
     /**
      * 构造方法
      * @param string $message
      * @param string $model
      */
-    public function __construct($message, $model = '', array $config = [])
+    public function __construct($message, protected $model = '', array $config = [])
     {
         $this->message = $message;
-        $this->model   = $model;
 
         $this->setData('Database Config', $config);
     }

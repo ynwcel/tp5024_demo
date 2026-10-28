@@ -38,7 +38,7 @@ trait Jump
     {
         if (is_null($url) && !is_null(Request::instance()->server('HTTP_REFERER'))) {
             $url = Request::instance()->server('HTTP_REFERER');
-        } elseif ('' !== $url && !strpos($url, '://') && 0 !== strpos($url, '/')) {
+        } elseif ('' !== $url && !strpos($url, '://') && !str_starts_with($url, '/')) {
             $url = Url::build($url);
         }
 
@@ -81,7 +81,7 @@ trait Jump
     {
         if (is_null($url)) {
             $url = Request::instance()->isAjax() ? '' : 'javascript:history.back(-1);';
-        } elseif ('' !== $url && !strpos($url, '://') && 0 !== strpos($url, '/')) {
+        } elseif ('' !== $url && !strpos($url, '://') && !str_starts_with($url, '/')) {
             $url = Url::build($url);
         }
 
@@ -146,7 +146,7 @@ trait Jump
      */
     protected function redirect($url, $params = [], $code = 302, $with = [])
     {
-        if (is_integer($params)) {
+        if (is_int($params)) {
             $code   = $params;
             $params = [];
         }

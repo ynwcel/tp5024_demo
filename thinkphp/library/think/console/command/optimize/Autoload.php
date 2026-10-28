@@ -108,16 +108,16 @@ EOF;
         $rootPath   = $this->normalizePath(realpath(ROOT_PATH));
         $path       = $this->normalizePath($path);
 
-        if ($libPath !== null && strpos($path, $libPath . '/') === 0) {
+        if ($libPath !== null && str_starts_with($path, $libPath . '/')) {
             $path    = substr($path, strlen(LIB_PATH));
             $baseDir = 'LIB_PATH';
-        } elseif ($appPath !== null && strpos($path, $appPath . '/') === 0) {
+        } elseif ($appPath !== null && str_starts_with($path, $appPath . '/')) {
             $path    = substr($path, strlen($appPath) + 1);
             $baseDir = 'APP_PATH';
-        } elseif ($extendPath !== null && strpos($path, $extendPath . '/') === 0) {
+        } elseif ($extendPath !== null && str_starts_with($path, $extendPath . '/')) {
             $path    = substr($path, strlen($extendPath) + 1);
             $baseDir = 'EXTEND_PATH';
-        } elseif ($rootPath !== null && strpos($path, $rootPath . '/') === 0) {
+        } elseif ($rootPath !== null && str_starts_with($path, $rootPath . '/')) {
             $path    = substr($path, strlen($rootPath) + 1);
             $baseDir = 'ROOT_PATH';
         }
@@ -144,7 +144,7 @@ EOF;
             $path   = substr($path, strlen($prefix));
         }
 
-        if (substr($path, 0, 1) === '/') {
+        if (str_starts_with($path, '/')) {
             $absolute = true;
             $path     = substr($path, 1);
         }
@@ -201,7 +201,7 @@ EOF;
             $classes = $this->findClasses($filePath);
 
             foreach ($classes as $class) {
-                if (null !== $namespace && 0 !== strpos($class, $namespace)) {
+                if (null !== $namespace && !str_starts_with($class, $namespace)) {
                     continue;
                 }
 
@@ -250,7 +250,7 @@ EOF;
         // strip strings
         $contents = preg_replace('{"[^"\\\\]*+(\\\\.[^"\\\\]*+)*+"|\'[^\'\\\\]*+(\\\\.[^\'\\\\]*+)*+\'}s', 'null', $contents);
         // strip leading non-php code if needed
-        if (substr($contents, 0, 2) !== '<?') {
+        if (!str_starts_with($contents, '<?')) {
             $contents = preg_replace('{^.+?<\?}s', '<?', $contents, 1, $replacements);
             if ($replacements === 0) {
                 return [];
@@ -260,7 +260,7 @@ EOF;
         $contents = preg_replace('{\?>.+<\?}s', '?><?', $contents);
         // strip trailing non-php code if needed
         $pos = strrpos($contents, '?>');
-        if (false !== $pos && false === strpos(substr($contents, $pos), '<?')) {
+        if (false !== $pos && !str_contains(substr($contents, $pos), '<?')) {
             $contents = substr($contents, 0, $pos);
         }
 

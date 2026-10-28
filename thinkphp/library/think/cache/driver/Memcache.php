@@ -47,7 +47,7 @@ class Memcache extends Driver
         }
         // 建立连接
         foreach ((array) $hosts as $i => $host) {
-            $port = isset($ports[$i]) ? $ports[$i] : $ports[0];
+            $port = $ports[$i] ?? $ports[0];
             $this->options['timeout'] > 0 ?
             $this->handler->addServer($host, $port, $this->options['persistent'], 1, $this->options['timeout']) :
             $this->handler->addServer($host, $port, $this->options['persistent'], 1);
@@ -89,9 +89,7 @@ class Memcache extends Driver
      */
     public function set($name, $value, $expire = null)
     {
-        if (is_null($expire)) {
-            $expire = $this->options['expire'];
-        }
+        $expire ??= $this->options['expire'];
         if ($expire instanceof \DateTime) {
             $expire = $expire->getTimestamp() - time();
         }

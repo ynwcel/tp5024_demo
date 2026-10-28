@@ -81,13 +81,13 @@ abstract class Make extends Command
     {
         $appNamespace = App::$namespace;
 
-        if (strpos($name, $appNamespace . '\\') === 0) {
+        if (str_starts_with($name, $appNamespace . '\\')) {
             return $name;
         }
 
         if (Config::get('app_multi_module')) {
             if (strpos($name, '/')) {
-                list($module, $name) = explode('/', $name, 2);
+                [$module, $name] = explode('/', $name, 2);
             } else {
                 $module = 'common';
             }
@@ -95,7 +95,7 @@ abstract class Make extends Command
             $module = null;
         }
 
-        if (strpos($name, '/') !== false) {
+        if (str_contains($name, '/')) {
             $name = str_replace('/', '\\', $name);
         }
 

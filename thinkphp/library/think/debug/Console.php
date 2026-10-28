@@ -47,9 +47,9 @@ class Console
         $request     = Request::instance();
         $contentType = $response->getHeader('Content-Type');
         $accept      = $request->header('accept');
-        if (strpos($accept, 'application/json') === 0 || $request->isAjax()) {
+        if (str_starts_with($accept, 'application/json') || $request->isAjax()) {
             return false;
-        } elseif (!empty($contentType) && strpos($contentType, 'html') === false) {
+        } elseif (!empty($contentType) && !str_contains($contentType, 'html')) {
             return false;
         }
         // 获取基本信息
@@ -95,11 +95,11 @@ class Console
                         $names  = explode('|', $name);
                         $result = [];
                         foreach ($names as $name) {
-                            $result = array_merge($result, isset($log[$name]) ? $log[$name] : []);
+                            $result = array_merge($result, $log[$name] ?? []);
                         }
                         $trace[$title] = $result;
                     } else {
-                        $trace[$title] = isset($log[$name]) ? $log[$name] : '';
+                        $trace[$title] = $log[$name] ?? '';
                     }
             }
         }
